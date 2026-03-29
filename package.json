@@ -1,0 +1,12 @@
+{
+  "name": "healthsimplify",
+  "version": "1.0.0",
+  "scripts": {
+    "client": "cd client && npm run dev",
+    "server": "node server/index.js",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
