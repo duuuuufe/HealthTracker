@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import './App.css';
 
 const FEATURES = [
@@ -97,7 +98,7 @@ function App() {
           <li><a href="#features">Features</a></li>
           <li><a href="#how">How It Works</a></li>
           <li><a href="#contact">Contact</a></li>
-          <li><a href="#contact" className="btn btn-nav">Get Started</a></li>
+          <li><Link to="/register" className="btn btn-nav">Get Started</Link></li>
         </ul>
       </nav>
 
@@ -117,7 +118,7 @@ function App() {
           <div className="hero-trust">
             <span>&#10003; HIPAA-conscious design</span>
             <span>&#10003; Real-time alerts</span>
-            <span>&#10003; No programming needed</span>
+            <span>&#10003; Easy, Accessible and Personalized</span>
           </div>
         </div>
         <div className="hero-graphic">

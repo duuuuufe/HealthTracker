@@ -12,6 +12,16 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'HealthSimplify API is running' });
 });
 
+// Registration endpoint
+app.post('/api/register', (req, res) => {
+  const { username, email, password, firstName, lastName, age, gender } = req.body;
+  if (!username || !email || !password || !firstName || !lastName || !age || !gender) {
+    return res.status(400).json({ error: 'Required fields missing' });
+  }
+  console.log('New registration:', { username, email, firstName, lastName });
+  res.status(201).json({ success: true, message: 'Account created successfully' });
+});
+
 // Contact form endpoint
 app.post('/api/contact', (req, res) => {
   const { name, email, message } = req.body;
