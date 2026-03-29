@@ -1,0 +1,226 @@
+.dashboard {
+  min-height: 100vh;
+  background: #f1f5f9;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ── Nav ── */
+.dash-nav {
+  background: #1e3a5f;
+  padding: 16px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+
+.dash-logo {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-logo:hover { color: #93c5fd; }
+
+.dash-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.dash-date {
+  font-size: 0.85rem;
+  color: #93c5fd;
+  font-weight: 500;
+}
+
+.dash-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #93c5fd;
+}
+
+.dash-logout {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dash-logout:hover { background: rgba(255,255,255,0.2); }
+
+/* ── Main ── */
+.dash-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 32px 60px;
+}
+
+/* ── Welcome Banner ── */
+.dash-welcome {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+  border-radius: 16px;
+  padding: 36px 40px;
+  margin-bottom: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  color: #fff;
+}
+
+.dash-welcome-text h1 {
+  font-size: 1.9rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.dash-welcome-text p {
+  font-size: 0.98rem;
+  opacity: 0.85;
+}
+
+.accent { color: #93c5fd; }
+
+.dash-welcome-stats {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.dash-stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  padding: 14px 20px;
+  min-width: 180px;
+}
+
+.dash-stat-icon { font-size: 1.6rem; }
+
+.dash-stat-label {
+  display: block;
+  font-size: 0.75rem;
+  opacity: 0.75;
+  font-weight: 500;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dash-stat-value {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+/* ── Feature Grid ── */
+.dash-section-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin-bottom: 20px;
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.dash-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 24px 22px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  text-decoration: none;
+  color: inherit;
+  border: 2px solid transparent;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+}
+
+.dash-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.1);
+  border-color: var(--card-color);
+}
+
+.dash-card-icon {
+  font-size: 2rem;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card-color) 12%, white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dash-card-body { flex: 1; }
+
+.dash-card-body h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin-bottom: 5px;
+}
+
+.dash-card-body p {
+  font-size: 0.85rem;
+  color: #6b7280;
+  line-height: 1.55;
+}
+
+.dash-card-arrow {
+  font-size: 1.1rem;
+  color: var(--card-color);
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.dash-card:hover .dash-card-arrow {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .dash-nav { padding: 14px 20px; }
+  .dash-date { display: none; }
+  .dash-main { padding: 24px 16px 48px; }
+  .dash-welcome { padding: 28px 24px; }
+  .dash-welcome-text h1 { font-size: 1.5rem; }
+  .dash-welcome-stats { gap: 12px; }
+  .dash-stat { min-width: 140px; padding: 12px 14px; }
+}
