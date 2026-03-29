@@ -98,7 +98,7 @@ export default function Register() {
       });
 
       setStatus('success');
-      setTimeout(() => navigate('/'), 2000);
+      setTimeout(() => navigate('/dashboard'), 2000);
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
         setErrors((prev) => ({ ...prev, email: 'An account with this email already exists' }));
@@ -246,7 +246,7 @@ export default function Register() {
                 <p className="submit-error">&#10007; Registration failed. Please try again.</p>
               )}
               {status === 'success' && (
-                <p className="submit-success">&#10003; Account created! Redirecting you home...</p>
+                <p className="submit-success">&#10003; Account created! Redirecting to your dashboard...</p>
               )}
             </div>
           )}

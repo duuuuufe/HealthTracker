@@ -107,10 +107,10 @@ function App() {
       <section className="hero">
         <div className="hero-content">
           <div className="hero-badge">Personal Health Monitoring System</div>
-          <h1>Your Complete Health<br /><span className="accent">Management Hub</span></h1>
+          <h1>Your Health, Managed,<br /><span className="accent">Simplified</span></h1>
           <p>
-            Track vital signs, manage medications, monitor your diet, and stay connected with
-            your care team — all in one secure, easy-to-use platform designed for patients and caregivers.
+            Track vitals, manage medications, monitor your diet, and stay connected with
+            your care team — all in one secure, easy-to-use platform designed and personalized for you.
           </p>
           <div className="hero-buttons">
             <a href="#contact" className="btn btn-primary">Start for Free</a>
