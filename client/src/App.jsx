@@ -98,6 +98,7 @@ function App() {
           <li><a href="#features">Features</a></li>
           <li><a href="#how">How It Works</a></li>
           <li><a href="#contact">Contact</a></li>
+          <li><Link to="/login">Login In</Link></li>
           <li><Link to="/register" className="btn btn-nav">Get Started</Link></li>
         </ul>
       </nav>
@@ -158,7 +159,7 @@ function App() {
       <section id="features" className="features">
         <div className="section-header">
           <h2>Everything You Need to Manage Your Health</h2>
-          <p>Ten powerful modules covering every aspect of personal health monitoring.</p>
+          <p>Ten powerful tools to cover every aspect of your personal health.</p>
         </div>
         <div className="feature-grid">
           {FEATURES.map((f) => (

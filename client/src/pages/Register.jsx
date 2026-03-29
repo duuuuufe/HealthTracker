@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 import '../styles/Register.css';
 
 const INITIAL = {
@@ -69,18 +72,38 @@ export default function Register() {
     if (!validateStep()) return;
     setStatus('sending');
     try {
-      const res = await fetch('http://localhost:5000/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+      // Create the Firebase Auth user
+      const { user } = await createUserWithEmailAndPassword(auth, form.email, form.password);
+
+      // Set the display name to the chosen username
+      await updateProfile(user, { displayName: form.username });
+
+      // Save the full profile to Firestore under users/{uid}
+      await setDoc(doc(db, 'users', user.uid), {
+        username:    form.username,
+        email:       form.email,
+        firstName:   form.firstName,
+        lastName:    form.lastName,
+        age:         Number(form.age),
+        gender:      form.gender,
+        height:      form.height,
+        heightUnit:  form.heightUnit,
+        weight:      form.weight,
+        weightUnit:  form.weightUnit,
+        doctorName:  form.doctorName,
+        doctorPhone: form.doctorPhone,
+        lastVisit:   form.lastVisit,
+        nextVisit:   form.nextVisit,
+        createdAt:   new Date().toISOString(),
       });
-      if (res.ok) {
-        setStatus('success');
-        setTimeout(() => navigate('/'), 2000);
-      } else {
-        setStatus('error');
+
+      setStatus('success');
+      setTimeout(() => navigate('/'), 2000);
+    } catch (err) {
+      if (err.code === 'auth/email-already-in-use') {
+        setErrors((prev) => ({ ...prev, email: 'An account with this email already exists' }));
+        setStep(0);
       }
-    } catch {
       setStatus('error');
     }
   };
