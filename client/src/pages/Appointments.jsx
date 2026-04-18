@@ -34,6 +34,8 @@ const EMPTY_FORM = {
   location: '',
   type: 'General Checkup',
   notes: '',
+  reminders: true,
+  phone: '',
 };
 
 export default function Appointments() {
@@ -96,6 +98,8 @@ export default function Appointments() {
       location: form.location.trim(),
       type: form.type,
       notes: form.notes.trim(),
+      reminders: form.reminders,
+      phone: form.phone.trim(),
       updatedAt: Timestamp.now(),
     };
     try {
@@ -124,6 +128,8 @@ export default function Appointments() {
       location: appt.location,
       type: appt.type,
       notes: appt.notes || '',
+      reminders: appt.reminders ?? true,
+      phone: appt.phone || '',
     });
     setEditingId(appt.id);
     setShowForm(true);
@@ -236,6 +242,33 @@ export default function Appointments() {
                   onChange={set('notes')}
                 />
               </div>
+
+              {/* ── Reminder Settings ── */}
+              <div className="appt-reminders-row">
+                <label className="appt-toggle-label">
+                  <input
+                    type="checkbox"
+                    checked={form.reminders}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, reminders: e.target.checked }))
+                    }
+                  />
+                  <span className="appt-toggle-switch" />
+                  <span>Send reminders (7 days, 2 days, and 1 day before)</span>
+                </label>
+              </div>
+
+              {form.reminders && (
+                <div className="field appt-phone-field">
+                  <label>Phone for SMS <span className="optional">(optional — email is always sent)</span></label>
+                  <input
+                    type="tel"
+                    placeholder="e.g. +1 555-123-4567"
+                    value={form.phone}
+                    onChange={set('phone')}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="appt-form-actions">
@@ -273,6 +306,7 @@ export default function Appointments() {
                     <div className="appt-card-body">
                       <h3>{a.provider}</h3>
                       <span className="appt-badge">{a.type}</span>
+                      {a.reminders && <span className="appt-badge appt-badge-reminder">Reminders On</span>}
                       <p className="appt-meta">
                         <span>{fmtTime(a.time)}</span>
                         <span>{a.location}</span>
