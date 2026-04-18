@@ -9,6 +9,8 @@ import Register from './pages/Register.jsx'
 import Login from './pages/Login.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Appointments from './pages/Appointments.jsx'
+import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
+import Terms from './pages/Terms.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -20,6 +22,8 @@ createRoot(document.getElementById('root')).render(
           <Route path="/login"        element={<Login />} />
           <Route path="/dashboard"    element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+          <Route path="/privacy"      element={<PrivacyPolicy />} />
+          <Route path="/terms"        element={<Terms />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

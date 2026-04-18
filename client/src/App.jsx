@@ -250,6 +250,8 @@ function App() {
             <a href="#features">Features</a>
             <a href="#how">How It Works</a>
             <a href="#contact">Contact</a>
+            <Link to="/privacy">Privacy Policy</Link>
+            <Link to="/terms">Terms &amp; Conditions</Link>
           </div>
           <p className="footer-copy">&copy; 2026 HealthSimplify. All rights reserved.</p>
         </div>
