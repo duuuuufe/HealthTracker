@@ -10,10 +10,40 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.vitals-header h1 {
+.vitals-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.vitals-header-left h1 {
   font-size: 28px;
+  color: #1f2937;
+}
+
+.vitals-header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.btn-back:hover {
+  background: #f3f4f6;
   color: #1f2937;
 }
 

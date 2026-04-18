@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
 import { 
@@ -261,17 +262,22 @@ export default function Vitals() {
   return (
     <div className="vitals-page">
       <div className="vitals-header">
-        <h1>💓 Vital Signs</h1>
-        {!showForm && (
-          <button className="btn-add" onClick={() => setShowForm(true)}>
-            + Add Vital
-          </button>
-        )}
-        {showForm && !editingId && (
-          <button className="btn-cancel" onClick={() => setShowForm(false)}>
-            Cancel
-          </button>
-        )}
+        <div className="vitals-header-left">
+          <Link to="/dashboard" className="btn-back">← Back</Link>
+          <h1>💓 Vital Signs</h1>
+        </div>
+        <div className="vitals-header-actions">
+          {!showForm && (
+            <button className="btn-add" onClick={() => setShowForm(true)}>
+              + Add Vitals
+            </button>
+          )}
+          {showForm && !editingId && (
+            <button className="btn-cancel" onClick={() => setShowForm(false)}>
+              Cancel
+            </button>
+          )}
+        </div>
       </div>
 
       {error && <div className="vitals-error">{error}</div>}
