@@ -4,6 +4,13 @@ import '../styles/Dashboard.css';
 
 const FEATURES = [
   {
+    icon: '📅',
+    title: 'Appointments',
+    desc: 'Schedule and manage doctor visits — set date, time, location, and provider.',
+    path: '/appointments',
+    color: '#0d9488',
+  },
+  {
     icon: '👤',
     title: 'Profile',
     desc: 'View and update your personal info, doctor details, and account settings.',
@@ -62,7 +69,7 @@ const FEATURES = [
   {
     icon: '🗄️',
     title: 'Data Maintenance',
-    desc: 'Add or update doctors, medicines, and system records — no coding required.',
+    desc: 'Add or update doctors, medicines, and system records.',
     path: '/data',
     color: '#64748b',
   },
