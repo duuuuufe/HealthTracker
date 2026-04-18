@@ -8,6 +8,7 @@ import App from './App.jsx'
 import Register from './pages/Register.jsx'
 import Login from './pages/Login.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import Vitals from './pages/Vitals.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -18,6 +19,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/register"  element={<Register />} />
           <Route path="/login"     element={<Login />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/vitals" element={<ProtectedRoute><Vitals /></ProtectedRoute>} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
