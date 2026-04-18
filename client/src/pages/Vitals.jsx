@@ -267,6 +267,9 @@ export default function Vitals() {
           <h1>💓 Vital Signs</h1>
         </div>
         <div className="vitals-header-actions">
+          <Link to="/vitals-summary" className="btn-summary">
+            📊 Summary
+          </Link>
           {!showForm && (
             <button className="btn-add" onClick={() => setShowForm(true)}>
               + Add Vitals

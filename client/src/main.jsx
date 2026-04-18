@@ -9,7 +9,9 @@ import Register from './pages/Register.jsx'
 import Login from './pages/Login.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Vitals from './pages/Vitals.jsx'
+import VitalsSummary from './pages/VitalsSummary.jsx'
 import Appointments from './pages/Appointments.jsx'
+import Profile from './pages/Profile.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -21,7 +23,9 @@ createRoot(document.getElementById('root')).render(
           <Route path="/login"     element={<Login />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/vitals" element={<ProtectedRoute><Vitals /></ProtectedRoute>} />
+          <Route path="/vitals-summary" element={<ProtectedRoute><VitalsSummary /></ProtectedRoute>} />
           <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

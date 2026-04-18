@@ -47,6 +47,25 @@
   color: #1f2937;
 }
 
+.btn-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-summary:hover {
+  background: #2563eb;
+}
+
 .btn-add {
   background: #ef4444;
   color: white;
