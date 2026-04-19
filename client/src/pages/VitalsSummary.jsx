@@ -47,40 +47,60 @@ export default function VitalsSummary() {
       return;
     }
 
-    const latestByType = {};
-    const valuesByType = {};
+    const vitalFields = ['bloodPressure', 'heartRate', 'cholesterol', 'temperature', 'weight', 'oxygenSat'];
+    const vitalLabels = {
+      bloodPressure: 'Blood Pressure',
+      heartRate: 'Heart Rate',
+      cholesterol: 'Cholesterol',
+      temperature: 'Temperature',
+      weight: 'Weight',
+      oxygenSat: 'Oxygen Saturation'
+    };
+    const vitalUnits = {
+      bloodPressure: 'mmHg',
+      heartRate: 'bpm',
+      cholesterol: 'mg/dL',
+      temperature: '°F',
+      weight: 'lbs',
+      oxygenSat: '%'
+    };
 
-    vitals.forEach(v => {
-      if (!latestByType[v.type] || v.date > latestByType[v.type].date) {
-        latestByType[v.type] = v;
-      }
-      
-      if (!valuesByType[v.type]) {
-        valuesByType[v.type] = [];
-      }
-      
-      let numValue = parseFloat(v.value);
-      if (!isNaN(numValue)) {
-        valuesByType[v.type].push(numValue);
-      }
+    const latestByField = {};
+    const valuesByField = {};
+
+    vitals.forEach(doc => {
+      vitalFields.forEach(field => {
+        if (doc[field]) {
+          // Track latest by field
+          if (!latestByField[field] || doc.date > latestByField[field].date) {
+            latestByField[field] = { value: doc[field], date: doc.date };
+          }
+          
+          // Track values for averages
+          if (!valuesByField[field]) {
+            valuesByField[field] = [];
+          }
+          let numValue = parseFloat(doc[field]);
+          if (!isNaN(numValue)) {
+            valuesByField[field].push(numValue);
+          }
+        }
+      });
     });
 
     const averages = {};
-    Object.keys(valuesByType).forEach(type => {
-      const values = valuesByType[type];
+    Object.keys(valuesByField).forEach(field => {
+      const values = valuesByField[field];
       if (values.length > 0) {
         const sum = values.reduce((a, b) => a + b, 0);
-        averages[type] = (sum / values.length).toFixed(1);
+        averages[field] = (sum / values.length).toFixed(1);
       }
     });
 
-    const entryCount = new Set(vitals.map(v => v.entryId)).size;
-
     setSummary({
-      latest: latestByType,
+      latest: latestByField,
       averages,
-      totalEntries: entryCount,
-      totalRecords: vitals.length,
+      totalEntries: vitals.length,
       dateRange: {
         oldest: vitals[vitals.length - 1]?.date,
         newest: vitals[0]?.date
@@ -88,32 +108,44 @@ export default function VitalsSummary() {
     });
   }, [vitals]);
 
-  const getVitalIcon = (type) => {
+  const getVitalIcon = (field) => {
     const icons = {
-      'Blood Pressure': '💓',
-      'Heart Rate': '❤️',
-      'Cholesterol': '🧬',
-      'Temperature': '🌡️',
-      'Weight': '⚖️',
-      'Oxygen Saturation': '🫁'
+      bloodPressure: '💓',
+      heartRate: '❤️',
+      cholesterol: '🧬',
+      temperature: '🌡️',
+      weight: '⚖️',
+      oxygenSat: '🫁'
     };
-    return icons[type] || '📊';
+    return icons[field] || '📊';
   };
 
-  const getVitalStatus = (type, value) => {
+  const getVitalLabel = (field) => {
+    const labels = {
+      bloodPressure: 'Blood Pressure',
+      heartRate: 'Heart Rate',
+      cholesterol: 'Cholesterol',
+      temperature: 'Temperature',
+      weight: 'Weight',
+      oxygenSat: 'Oxygen Saturation'
+    };
+    return labels[field] || field;
+  };
+
+  const getVitalStatus = (field, value) => {
     const statusRanges = {
-      'Blood Pressure': { low: [90, 60], high: [140, 90] },
-      'Heart Rate': { low: 60, high: 100 },
-      'Cholesterol': { high: 200 },
-      'Temperature': { low: 97, high: 99 },
-      'Weight': null,
-      'Oxygen Saturation': { low: 95 }
+      bloodPressure: { low: [90, 60], high: [140, 90] },
+      heartRate: { low: 60, high: 100 },
+      cholesterol: { high: 200 },
+      temperature: { low: 97, high: 99 },
+      weight: null,
+      oxygenSat: { low: 95 }
     };
 
-    const range = statusRanges[type];
+    const range = statusRanges[field];
     if (!range) return 'neutral';
 
-    if (type === 'Blood Pressure') {
+    if (field === 'bloodPressure') {
       const [sys, dia] = value.split('/').map(Number);
       if (sys > range.high[0] || dia > range.high[1]) return 'high';
       if (sys < range.low[0] || dia < range.low[1]) return 'low';
@@ -130,12 +162,19 @@ export default function VitalsSummary() {
 
   return (
     <div className="summary-page">
-      <div className="summary-header">
-        <div className="summary-header-left">
-          <Link to="/vitals" className="btn-back">← Back</Link>
-          <h1>📊 Vitals Summary</h1>
+      {/* ── Nav ── */}
+      <header className="dash-nav">
+        <Link to="/" className="dash-logo">&#10084; HealthSimplify</Link>
+        <Link to="/vitals" className="appt-back-link">&larr; Vitals</Link>
+      </header>
+
+      <main className="summary-main">
+        {/* ── Page Header ── */}
+        <div className="summary-header">
+          <div className="summary-header-left">
+            <h1>📊 Vitals Summary</h1>
+          </div>
         </div>
-      </div>
 
       {!summary ? (
         <div className="summary-empty">
@@ -148,10 +187,6 @@ export default function VitalsSummary() {
             <div className="stat-card">
               <span className="stat-value">{summary.totalEntries}</span>
               <span className="stat-label">Total Entries</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-value">{summary.totalRecords}</span>
-              <span className="stat-label">Total Records</span>
             </div>
             <div className="stat-card">
               <span className="stat-value">
@@ -167,15 +202,15 @@ export default function VitalsSummary() {
             <div className="summary-section">
               <h2>Latest Readings</h2>
               <div className="vitals-grid">
-                {Object.entries(summary.latest).map(([type, vital]) => {
-                  const status = getVitalStatus(type, vital.value);
+                {Object.entries(summary.latest).map(([field, data]) => {
+                  const status = getVitalStatus(field, data.value);
                   return (
-                    <div key={type} className={`vital-card ${status}`}>
-                      <div className="vital-icon">{getVitalIcon(type)}</div>
+                    <div key={field} className={`vital-card ${status}`}>
+                      <div className="vital-icon">{getVitalIcon(field)}</div>
                       <div className="vital-info">
-                        <span className="vital-type">{type}</span>
-                        <span className="vital-value">{vital.value} {vital.unit}</span>
-                        <span className="vital-date">{vital.date}</span>
+                        <span className="vital-type">{getVitalLabel(field)}</span>
+                        <span className="vital-value">{data.value} {field === 'bloodPressure' ? 'mmHg' : field === 'heartRate' ? 'bpm' : field === 'cholesterol' ? 'mg/dL' : field === 'temperature' ? '°F' : field === 'weight' ? 'lbs' : '%'}</span>
+                        <span className="vital-date">{data.date}</span>
                       </div>
                       <span className={`status-badge ${status}`}>
                         {status === 'normal' ? '✓' : status === 'high' ? '↑' : '↓'}
@@ -189,15 +224,15 @@ export default function VitalsSummary() {
             <div className="summary-section">
               <h2>Averages</h2>
               <div className="vitals-grid">
-                {Object.entries(summary.averages).map(([type, avg]) => {
-                  const vital = summary.latest[type];
-                  const status = getVitalStatus(type, vital?.value || avg);
+                {Object.entries(summary.averages).map(([field, avg]) => {
+                  const latest = summary.latest[field];
+                  const status = getVitalStatus(field, latest?.value || avg);
                   return (
-                    <div key={type} className={`vital-card ${status}`}>
-                      <div className="vital-icon">{getVitalIcon(type)}</div>
+                    <div key={field} className={`vital-card ${status}`}>
+                      <div className="vital-icon">{getVitalIcon(field)}</div>
                       <div className="vital-info">
-                        <span className="vital-type">{type}</span>
-                        <span className="vital-value">{avg} {vital?.unit}</span>
+                        <span className="vital-type">{getVitalLabel(field)}</span>
+                        <span className="vital-value">{avg} {field === 'bloodPressure' ? 'mmHg' : field === 'heartRate' ? 'bpm' : field === 'cholesterol' ? 'mg/dL' : field === 'temperature' ? '°F' : field === 'weight' ? 'lbs' : '%'}</span>
                         <span className="vital-label">average</span>
                       </div>
                     </div>
@@ -214,6 +249,7 @@ export default function VitalsSummary() {
           </div>
         </>
       )}
+      </main>
     </div>
   );
 }

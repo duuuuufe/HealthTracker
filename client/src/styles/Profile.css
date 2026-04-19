@@ -1,8 +1,40 @@
 /* filepath: client/src/styles/Profile.css */
 .profile-page {
+  min-height: 100vh;
+  background: #f1f5f9;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ── Nav from Dashboard.css ── */
+.dash-nav {
+  background: #1e3a5f;
+  padding: 16px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+
+.dash-logo {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-logo:hover { color: #93c5fd; }
+
+/* ── Main ── */
+.profile-main {
   max-width: 800px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 40px 32px 60px;
 }
 
 .profile-header {
@@ -25,21 +57,15 @@
   color: #1f2937;
 }
 
-.btn-back {
-  display: inline-flex;
-  align-items: center;
-  color: #6b7280;
+.appt-back-link {
+  color: #93c5fd;
   text-decoration: none;
-  font-size: 14px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  transition: background 0.2s;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: color 0.2s;
 }
 
-.btn-back:hover {
-  background: #f3f4f6;
-  color: #1f2937;
-}
+.appt-back-link:hover { color: #ffffff; }
 
 .btn-edit {
   background: #3b82f6;
@@ -101,10 +127,11 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
-.info-grid {
+.info-grid,
+.form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px 20px;
 }
 
 .info-item {
@@ -144,12 +171,6 @@
   margin: 0 0 16px 0;
   padding-bottom: 8px;
   border-bottom: 1px solid #e5e7eb;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
 }
 
 .form-group {

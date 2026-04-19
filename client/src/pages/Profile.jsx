@@ -51,10 +51,31 @@ export default function Profile() {
 
   const handleChange = (field) => (e) => {
     setFormData({ ...formData, [field]: e.target.value });
+    setError('');
+    setSuccess('');
+  };
+
+  const validate = () => {
+    const errors = [];
+    if (!formData.firstName?.trim()) errors.push('First name is required');
+    if (!formData.lastName?.trim())  errors.push('Last name is required');
+    if (!formData.age || formData.age < 1 || formData.age > 120) errors.push('Age must be between 1 and 120');
+    if (!formData.gender)            errors.push('Gender is required');
+    if (!formData.height)            errors.push('Height is required');
+    if (!formData.weight)            errors.push('Weight is required');
+    if (!formData.doctorName?.trim()) errors.push('Doctor name is required');
+    return errors;
   };
 
   const handleSave = async () => {
     if (!user) return;
+    
+    const validationErrors = validate();
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join('. '));
+      return;
+    }
+    
     setSaving(true);
     setError('');
     setSuccess('');
@@ -100,17 +121,24 @@ export default function Profile() {
 
   return (
     <div className="profile-page">
-      <div className="profile-header">
-        <div className="profile-header-left">
-          <Link to="/dashboard" className="btn-back">← Back</Link>
-          <h1>👤 Profile</h1>
+      {/* ── Nav ── */}
+      <header className="dash-nav">
+        <Link to="/" className="dash-logo">&#10084; HealthSimplify</Link>
+        <Link to="/dashboard" className="appt-back-link">&larr; Dashboard</Link>
+      </header>
+
+      <main className="profile-main">
+        {/* ── Page Header ── */}
+        <div className="profile-header">
+          <div className="profile-header-left">
+            <h1>👤 Profile</h1>
+          </div>
+          {!editing && (
+            <button className="btn-edit" onClick={() => setEditing(true)}>
+              ✏️ Edit
+            </button>
+          )}
         </div>
-        {!editing && (
-          <button className="btn-edit" onClick={() => setEditing(true)}>
-            ✏️ Edit
-          </button>
-        )}
-      </div>
 
       {error && <div className="profile-error">{error}</div>}
       {success && <div className="profile-success">{success}</div>}
@@ -258,6 +286,7 @@ export default function Profile() {
           </div>
         </div>
       )}
+      </main>
     </div>
   );
 }

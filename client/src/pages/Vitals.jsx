@@ -13,6 +13,7 @@ import {
   where,
   orderBy 
 } from 'firebase/firestore';
+import { updateDoc as updateUserDoc, doc as userDoc } from 'firebase/firestore';
 import '../styles/Vitals.css';
 
 const VITAL_TYPES = [
@@ -87,98 +88,51 @@ export default function Vitals() {
     if (!user) return;
     setError(null);
 
-    const newVitals = [];
-
-    // Blood Pressure
+    // Build the vitals object with all values
+    const vitalsData = {};
     if (formData.bloodPressure.systolic && formData.bloodPressure.diastolic) {
-      newVitals.push({
-        userId: user.uid,
-        type: 'Blood Pressure',
-        value: `${formData.bloodPressure.systolic}/${formData.bloodPressure.diastolic}`,
-        unit: 'mmHg',
-        date: formData.date,
-      });
+      vitalsData.bloodPressure = `${formData.bloodPressure.systolic}/${formData.bloodPressure.diastolic}`;
     }
+    if (formData.heartRate) vitalsData.heartRate = formData.heartRate;
+    if (formData.cholesterol) vitalsData.cholesterol = formData.cholesterol;
+    if (formData.temperature) vitalsData.temperature = formData.temperature;
+    if (formData.weight) vitalsData.weight = formData.weight;
+    if (formData.oxygenSat) vitalsData.oxygenSat = formData.oxygenSat;
 
-    // Heart Rate
-    if (formData.heartRate) {
-      newVitals.push({
-        userId: user.uid,
-        type: 'Heart Rate',
-        value: formData.heartRate,
-        unit: 'bpm',
-        date: formData.date,
-      });
-    }
-
-    // Cholesterol
-    if (formData.cholesterol) {
-      newVitals.push({
-        userId: user.uid,
-        type: 'Cholesterol',
-        value: formData.cholesterol,
-        unit: 'mg/dL',
-        date: formData.date,
-      });
-    }
-
-    // Temperature
-    if (formData.temperature) {
-      newVitals.push({
-        userId: user.uid,
-        type: 'Temperature',
-        value: formData.temperature,
-        unit: '°F',
-        date: formData.date,
-      });
-    }
-
-    // Weight
-    if (formData.weight) {
-      newVitals.push({
-        userId: user.uid,
-        type: 'Weight',
-        value: formData.weight,
-        unit: 'lbs',
-        date: formData.date,
-      });
-    }
-
-    // Oxygen Saturation
-    if (formData.oxygenSat) {
-      newVitals.push({
-        userId: user.uid,
-        type: 'Oxygen Saturation',
-        value: formData.oxygenSat,
-        unit: '%',
-        date: formData.date,
-      });
-    }
-
-    if (newVitals.length === 0) {
+    if (Object.keys(vitalsData).length === 0) {
       setError('Please fill in at least one vital field');
       return;
     }
 
-    // Use a single timestamp for all vitals in this entry
     const entryTimestamp = new Date().toISOString();
 
     try {
-      // If editing, delete old records for this entry first
+      // If editing, update the existing document
       if (editingId) {
-        const oldVitals = vitals.filter(v => v.createdAt === editingId || v.date === editingId);
-        await Promise.all(oldVitals.map(v => deleteDoc(doc(db, 'vitals', v.id))));
+        await updateDoc(doc(db, 'vitals', editingId), {
+          ...vitalsData,
+          date: formData.date,
+          updatedAt: entryTimestamp,
+        });
+      } else {
+        // Create new document with all vitals in one entry
+        await addDoc(collection(db, 'vitals'), {
+          userId: user.uid,
+          ...vitalsData,
+          date: formData.date,
+          createdAt: entryTimestamp,
+        });
       }
 
-      // Save all vitals to Firebase with the same timestamp
-      const savePromises = newVitals.map(vital => 
-        addDoc(collection(db, 'vitals'), {
-          ...vital,
-          createdAt: entryTimestamp,
-          entryId: entryTimestamp, // Use same ID to group them
-        })
-      );
-      await Promise.all(savePromises);
+      // Update profile weight if weight was recorded
+      if (formData.weight) {
+        const weightValue = Number(formData.weight);
+        await updateUserDoc(userDoc(db, 'users', user.uid), {
+          weight: weightValue,
+          weightUnit: 'lbs',
+          updatedAt: new Date().toISOString(),
+        });
+      }
 
       // Refresh the list
       const q = query(
@@ -200,23 +154,9 @@ export default function Vitals() {
     }
   };
 
-  // Group vitals by entryId (same for all vitals saved together)
-  const groupedVitals = vitals.reduce((groups, vital) => {
-    const entryId = vital.entryId || vital.createdAt || 'unknown';
-    if (!groups[entryId]) {
-      groups[entryId] = [];
-    }
-    groups[entryId].push(vital);
-    return groups;
-  }, {});
-
-  const sortedEntryIds = Object.keys(groupedVitals).sort((a, b) => b.localeCompare(a));
-
-  const handleEditGroup = (entryId, vitalsInGroup) => {
-    // Use the first vital's date for the form
-    const firstVital = vitalsInGroup[0];
+  const handleEditGroup = (v) => {
     const formFromGroup = {
-      date: firstVital?.date || new Date().toISOString().split('T')[0],
+      date: v.date || new Date().toISOString().split('T')[0],
       bloodPressure: { systolic: '', diastolic: '' },
       heartRate: '',
       cholesterol: '',
@@ -225,33 +165,27 @@ export default function Vitals() {
       oxygenSat: '',
     };
 
-    vitalsInGroup.forEach(v => {
-      if (v.type === 'Blood Pressure') {
-        const [sys, dia] = v.value.split('/');
-        formFromGroup.bloodPressure = { systolic: sys || '', diastolic: dia || '' };
-      } else if (v.type === 'Heart Rate') {
-        formFromGroup.heartRate = v.value;
-      } else if (v.type === 'Cholesterol') {
-        formFromGroup.cholesterol = v.value;
-      } else if (v.type === 'Temperature') {
-        formFromGroup.temperature = v.value;
-      } else if (v.type === 'Weight') {
-        formFromGroup.weight = v.value;
-      } else if (v.type === 'Oxygen Saturation') {
-        formFromGroup.oxygenSat = v.value;
-      }
-    });
+    // Parse blood pressure
+    if (v.bloodPressure) {
+      const [sys, dia] = v.bloodPressure.split('/');
+      formFromGroup.bloodPressure = { systolic: sys || '', diastolic: dia || '' };
+    }
+    if (v.heartRate) formFromGroup.heartRate = v.heartRate;
+    if (v.cholesterol) formFromGroup.cholesterol = v.cholesterol;
+    if (v.temperature) formFromGroup.temperature = v.temperature;
+    if (v.weight) formFromGroup.weight = v.weight;
+    if (v.oxygenSat) formFromGroup.oxygenSat = v.oxygenSat;
 
     setFormData(formFromGroup);
-    setEditingId(entryId);
+    setEditingId(v.id);
     setShowForm(true);
   };
 
-  const handleDeleteGroup = async (entryId, vitalsInGroup) => {
-    if (!confirm(`Delete this entry (${vitalsInGroup.length} vital record(s))?`)) return;
+  const handleDeleteGroup = async (v) => {
+    if (!confirm('Delete this entry?')) return;
     try {
-      await Promise.all(vitalsInGroup.map(v => deleteDoc(doc(db, 'vitals', v.id))));
-      setVitals(vitals.filter(v => v.entryId !== entryId && v.createdAt !== entryId));
+      await deleteDoc(doc(db, 'vitals', v.id));
+      setVitals(vitals.filter(v => v.id !== v.id));
     } catch (err) {
       setError('Failed to delete vitals');
     }
@@ -261,175 +195,209 @@ export default function Vitals() {
 
   return (
     <div className="vitals-page">
-      <div className="vitals-header">
-        <div className="vitals-header-left">
-          <Link to="/dashboard" className="btn-back">← Back</Link>
-          <h1>💓 Vital Signs</h1>
-        </div>
-        <div className="vitals-header-actions">
-          <Link to="/vitals-summary" className="btn-summary">
-            📊 Summary
-          </Link>
-          {!showForm && (
-            <button className="btn-add" onClick={() => setShowForm(true)}>
-              + Add Vitals
-            </button>
-          )}
-          {showForm && !editingId && (
-            <button className="btn-cancel" onClick={() => setShowForm(false)}>
-              Cancel
-            </button>
-          )}
-        </div>
-      </div>
-
-      {error && <div className="vitals-error">{error}</div>}
-
-      {showForm && (
-        <form className="vitals-form-inline" onSubmit={handleSubmit}>
-          <h2>Record Vitals</h2>
-          
-          <div className="form-row">
-            <label>
-              Date
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              />
-            </label>
+      <header className="dash-nav">
+        <Link to="/" className="dash-logo">&#10084; HealthSimplify</Link>
+        <Link to="/dashboard" className="appt-back-link">&larr; Dashboard</Link>
+      </header>
+      
+      <main className="vitals-main">
+        <div className="vitals-header">
+          <div className="vitals-header-left">
+            <h1>💓 Vital Signs</h1>
           </div>
+          <div className="vitals-header-actions">
+            <Link to="/vitals-summary" className="btn-summary">
+              📊 Summary
+            </Link>
+            {!showForm && (
+              <button className="btn-add" onClick={() => setShowForm(true)}>
+                + Add Vitals
+              </button>
+            )}
+            {showForm && !editingId && (
+              <button className="btn-cancel" onClick={() => setShowForm(false)}>
+                Cancel
+              </button>
+            )}
+          </div>
+        </div>
 
-          <div className="vitals-grid">
-            <div className="vital-field">
-              <label>Blood Pressure (mmHg)</label>
-              <div className="bp-inputs">
+        {error && <div className="vitals-error">{error}</div>}
+
+        {showForm && (
+          <form className="vitals-form-inline" onSubmit={handleSubmit}>
+            <h2>Record Vitals</h2>
+            
+            <div className="form-row">
+              <label>
+                Date
                 <input
-                  type="number"
-                  value={formData.bloodPressure.systolic}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    bloodPressure: { ...formData.bloodPressure, systolic: e.target.value }
-                  })}
-                  placeholder="120"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 />
-                <span>/</span>
+              </label>
+            </div>
+
+            <div className="vitals-grid">
+              <div className="vital-field">
+                <label>Blood Pressure (mmHg)</label>
+                <div className="bp-inputs">
+                  <input
+                    type="number"
+                    value={formData.bloodPressure.systolic}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      bloodPressure: { ...formData.bloodPressure, systolic: e.target.value }
+                    })}
+                    placeholder="120"
+                  />
+                  <span>/</span>
+                  <input
+                    type="number"
+                    value={formData.bloodPressure.diastolic}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      bloodPressure: { ...formData.bloodPressure, diastolic: e.target.value }
+                    })}
+                    placeholder="80"
+                  />
+                </div>
+              </div>
+
+              <div className="vital-field">
+                <label>Heart Rate (bpm)</label>
                 <input
                   type="number"
-                  value={formData.bloodPressure.diastolic}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    bloodPressure: { ...formData.bloodPressure, diastolic: e.target.value }
-                  })}
-                  placeholder="80"
+                  value={formData.heartRate}
+                  onChange={(e) => setFormData({ ...formData, heartRate: e.target.value })}
+                  placeholder="72"
+                />
+              </div>
+
+              <div className="vital-field">
+                <label>Cholesterol (mg/dL)</label>
+                <input
+                  type="number"
+                  value={formData.cholesterol}
+                  onChange={(e) => setFormData({ ...formData, cholesterol: e.target.value })}
+                  placeholder="200"
+                />
+              </div>
+
+              <div className="vital-field">
+                <label>Temperature (°F)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.temperature}
+                  onChange={(e) => setFormData({ ...formData, temperature: e.target.value })}
+                  placeholder="98.6"
+                />
+              </div>
+
+              <div className="vital-field">
+                <label>Weight (lbs)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.weight}
+                  onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+                  placeholder="150"
+                />
+              </div>
+
+              <div className="vital-field">
+                <label>Oxygen Saturation (%)</label>
+                <input
+                  type="number"
+                  value={formData.oxygenSat}
+                  onChange={(e) => setFormData({ ...formData, oxygenSat: e.target.value })}
+                  placeholder="98"
                 />
               </div>
             </div>
 
-            <div className="vital-field">
-              <label>Heart Rate (bpm)</label>
-              <input
-                type="number"
-                value={formData.heartRate}
-                onChange={(e) => setFormData({ ...formData, heartRate: e.target.value })}
-                placeholder="72"
-              />
+            <div className="form-buttons">
+              <button type="submit" className="btn-save">Save All</button>
+              <button type="button" className="btn-cancel" onClick={resetForm}>Clear</button>
             </div>
+          </form>
+        )}
 
-            <div className="vital-field">
-              <label>Cholesterol (mg/dL)</label>
-              <input
-                type="number"
-                value={formData.cholesterol}
-                onChange={(e) => setFormData({ ...formData, cholesterol: e.target.value })}
-                placeholder="200"
-              />
-            </div>
-
-            <div className="vital-field">
-              <label>Temperature (°F)</label>
-              <input
-                type="number"
-                step="0.1"
-                value={formData.temperature}
-                onChange={(e) => setFormData({ ...formData, temperature: e.target.value })}
-                placeholder="98.6"
-              />
-            </div>
-
-            <div className="vital-field">
-              <label>Weight (lbs)</label>
-              <input
-                type="number"
-                step="0.1"
-                value={formData.weight}
-                onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                placeholder="150"
-              />
-            </div>
-
-            <div className="vital-field">
-              <label>Oxygen Saturation (%)</label>
-              <input
-                type="number"
-                value={formData.oxygenSat}
-                onChange={(e) => setFormData({ ...formData, oxygenSat: e.target.value })}
-                placeholder="98"
-              />
-            </div>
+        {vitals.length === 0 ? (
+          <div className="vitals-empty">
+            <p>No vitals recorded yet.</p>
+            <p>Click "Add Vital" to start tracking your health data.</p>
           </div>
-
-          <div className="form-buttons">
-            <button type="submit" className="btn-save">Save All</button>
-            <button type="button" className="btn-cancel" onClick={resetForm}>Clear</button>
-          </div>
-        </form>
-      )}
-
-      {vitals.length === 0 ? (
-        <div className="vitals-empty">
-          <p>No vitals recorded yet.</p>
-          <p>Click "Add Vital" to start tracking your health data.</p>
-        </div>
-      ) : (
-        <div className="vitals-groups">
-          {sortedEntryIds.map((entryId, index) => (
-            <div key={entryId} className="vital-group">
-              <div className="vital-group-header">
-                <h3>Entry #{sortedEntryIds.length - index}</h3>
-                <div className="vital-group-meta">
-                  {new Date(entryId).toLocaleString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric', 
-                    hour: 'numeric', 
-                    minute: '2-digit' 
-                  })}
-                </div>
-                <div className="vital-group-actions">
-                  <button onClick={() => handleEditGroup(entryId, groupedVitals[entryId])}>Edit</button>
-                  <button onClick={() => handleDeleteGroup(entryId, groupedVitals[entryId])} className="btn-delete">Delete</button>
-                </div>
-              </div>
-              <div className="vital-group-items">
-                {groupedVitals[entryId].map((v) => (
-                  <div key={v.id} className="vital-item">
-                    <span className="vital-item-icon">
-                      {v.type === 'Blood Pressure' ? '💓' :
-                       v.type === 'Heart Rate' ? '❤️' :
-                       v.type === 'Cholesterol' ? '🧬' :
-                       v.type === 'Temperature' ? '🌡️' :
-                       v.type === 'Weight' ? '⚖️' :
-                       v.type === 'Oxygen Saturation' ? '🫁' : '📊'}
-                    </span>
-                    <span className="vital-item-type">{v.type}</span>
-                    <span className="vital-item-value">{v.value} {v.unit}</span>
+        ) : (
+          <div className="vitals-groups">
+            {vitals.map((vitalDoc, index) => (
+              <div key={vitalDoc.id} className="vital-group">
+                <div className="vital-group-header">
+                  <h3>Entry #{vitals.length - index}</h3>
+                  <div className="vital-group-meta">
+                    {new Date(vitalDoc.createdAt).toLocaleString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric', 
+                      hour: 'numeric', 
+                      minute: '2-digit' 
+                    })}
                   </div>
-                ))}
+                  <div className="vital-group-actions">
+                    <button onClick={() => handleEditGroup(vitalDoc)}>Edit</button>
+                    <button onClick={() => handleDeleteGroup(vitalDoc)} className="btn-delete">Delete</button>
+                  </div>
+                </div>
+                <div className="vital-group-items">
+                  {vitalDoc.bloodPressure && (
+                    <div className="vital-item">
+                      <span className="vital-item-icon">💓</span>
+                      <span className="vital-item-type">Blood Pressure</span>
+                      <span className="vital-item-value">{vitalDoc.bloodPressure} mmHg</span>
+                    </div>
+                  )}
+                  {vitalDoc.heartRate && (
+                    <div className="vital-item">
+                      <span className="vital-item-icon">❤️</span>
+                      <span className="vital-item-type">Heart Rate</span>
+                      <span className="vital-item-value">{vitalDoc.heartRate} bpm</span>
+                    </div>
+                  )}
+                  {vitalDoc.cholesterol && (
+                    <div className="vital-item">
+                      <span className="vital-item-icon">🧬</span>
+                      <span className="vital-item-type">Cholesterol</span>
+                      <span className="vital-item-value">{vitalDoc.cholesterol} mg/dL</span>
+                    </div>
+                  )}
+                  {vitalDoc.temperature && (
+                    <div className="vital-item">
+                      <span className="vital-item-icon">🌡️</span>
+                      <span className="vital-item-type">Temperature</span>
+                      <span className="vital-item-value">{vitalDoc.temperature} °F</span>
+                    </div>
+                  )}
+                  {vitalDoc.weight && (
+                    <div className="vital-item">
+                      <span className="vital-item-icon">⚖️</span>
+                      <span className="vital-item-type">Weight</span>
+                      <span className="vital-item-value">{vitalDoc.weight} lbs</span>
+                    </div>
+                  )}
+                  {vitalDoc.oxygenSat && (
+                    <div className="vital-item">
+                      <span className="vital-item-icon">🫁</span>
+                      <span className="vital-item-type">Oxygen Saturation</span>
+                      <span className="vital-item-value">{vitalDoc.oxygenSat}%</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </main>
     </div>
   );
 }
