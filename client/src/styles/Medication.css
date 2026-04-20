@@ -1,0 +1,512 @@
+/* ── Medication Page ── */
+.med-page {
+  min-height: 100vh;
+  background: #f1f5f9;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.med-back-link {
+  color: #c4b5fd;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.med-back-link:hover { color: #ffffff; }
+
+/* ── Main ── */
+.med-main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 32px 60px;
+}
+
+/* ── Page Header ── */
+.med-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.med-header h1 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1e3a5f;
+  margin-bottom: 4px;
+}
+
+.med-header p {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.med-page .btn-add {
+  background: #8b5cf6;
+  color: #ffffff;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.med-page .btn-add:hover {
+  background: #7c3aed;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
+}
+
+/* ── Form ── */
+.med-form {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px 36px;
+  margin-bottom: 36px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  border: 2px solid #e5e7eb;
+}
+
+.med-form h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin-bottom: 24px;
+}
+
+.med-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.med-form .med-full {
+  grid-column: 1 / -1;
+}
+
+.med-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.med-form .field label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.med-form .field input,
+.med-form .field select,
+.med-form .field textarea {
+  padding: 11px 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+  background: #f8fafc;
+  color: #1e3a5f;
+  transition: border-color 0.2s, background 0.2s;
+  width: 100%;
+}
+
+.med-form .field textarea {
+  resize: vertical;
+}
+
+.med-form .field input:focus,
+.med-form .field select:focus,
+.med-form .field textarea:focus {
+  border-color: #8b5cf6;
+  background: #ffffff;
+}
+
+.med-form .field-error {
+  font-size: 0.8rem;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.med-form .optional {
+  font-weight: 400;
+  color: #9ca3af;
+  font-size: 0.82rem;
+}
+
+.med-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.med-page .btn-cancel {
+  background: none;
+  border: 2px solid #e5e7eb;
+  color: #6b7280;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.med-page .btn-cancel:hover {
+  border-color: #8b5cf6;
+  color: #8b5cf6;
+}
+
+.med-page .btn-save {
+  background: #8b5cf6;
+  color: #ffffff;
+  border: none;
+  padding: 10px 28px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.med-page .btn-save:hover { background: #7c3aed; }
+.med-page .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Intake Times Editor ── */
+.med-times-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.med-time-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.med-time-row input[type="time"] {
+  flex: 1;
+  max-width: 220px;
+}
+
+.btn-time-remove {
+  background: #fef2f2;
+  color: #dc2626;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-time-remove:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.btn-time-remove:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-time-add {
+  align-self: flex-start;
+  background: #f5f3ff;
+  color: #8b5cf6;
+  border: 1px dashed #c4b5fd;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.btn-time-add:hover {
+  background: #ede9fe;
+  border-color: #8b5cf6;
+}
+
+/* ── Sections ── */
+.med-section {
+  margin-bottom: 36px;
+}
+
+.med-section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin-bottom: 16px;
+}
+
+.med-empty {
+  color: #9ca3af;
+  font-size: 0.95rem;
+  padding: 20px 0;
+}
+
+/* ── Medication Cards ── */
+.med-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.med-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #8b5cf6;
+  transition: box-shadow 0.2s;
+}
+
+.med-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.med-card-past {
+  border-left-color: #d1d5db;
+  opacity: 0.7;
+}
+
+.med-card-past:hover { opacity: 0.85; }
+
+/* Icon badge */
+.med-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  height: 56px;
+  background: #f5f3ff;
+  border-radius: 12px;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.med-card-past .med-card-icon {
+  background: #f3f4f6;
+  filter: grayscale(1);
+}
+
+/* Body */
+.med-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.med-card-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.med-card-heading h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e3a5f;
+  margin: 0;
+}
+
+.med-dosage {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #8b5cf6;
+}
+
+.med-card-past .med-dosage { color: #9ca3af; }
+
+.med-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.med-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #8b5cf6;
+  background: #f5f3ff;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.med-card-past .med-badge {
+  color: #9ca3af;
+  background: #f3f4f6;
+}
+
+.med-badge-freq {
+  color: #0d9488;
+  background: #f0fdfa;
+}
+
+.med-card-past .med-badge-freq {
+  color: #9ca3af;
+  background: #f3f4f6;
+}
+
+.med-badge-reminder {
+  color: #16a34a;
+  background: #f0fdf4;
+}
+
+.med-times {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.med-times-label {
+  font-size: 0.82rem;
+  color: #6b7280;
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.med-time-chip {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1e3a5f;
+  background: #eef2ff;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+.med-card-past .med-time-chip {
+  color: #9ca3af;
+  background: #f3f4f6;
+}
+
+.med-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.med-notes {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* Actions */
+.med-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.med-page .btn-edit,
+.med-page .btn-delete {
+  border: none;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.med-page .btn-edit {
+  background: #f5f3ff;
+  color: #8b5cf6;
+}
+
+.med-page .btn-edit:hover { background: #ede9fe; }
+
+.med-page .btn-delete {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.med-page .btn-delete:hover { background: #fee2e2; }
+
+/* ── Reminder Toggle ── */
+.med-reminders-row {
+  grid-column: 1 / -1;
+  padding-top: 4px;
+}
+
+.med-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.med-toggle-label input[type="checkbox"] {
+  display: none;
+}
+
+.med-toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: #d1d5db;
+  border-radius: 12px;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.med-toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.med-toggle-label input:checked + .med-toggle-switch {
+  background: #16a34a;
+}
+
+.med-toggle-label input:checked + .med-toggle-switch::after {
+  transform: translateX(20px);
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .med-main { padding: 24px 16px 48px; }
+  .med-form { padding: 24px 20px; }
+  .med-form-grid { grid-template-columns: 1fr; }
+  .med-card { flex-direction: column; gap: 12px; }
+  .med-card-icon { min-width: auto; width: 48px; height: 48px; }
+  .med-card-actions { flex-direction: row; }
+}

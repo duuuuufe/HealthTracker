@@ -10,6 +10,7 @@ import Login from './pages/Login.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Vitals from './pages/Vitals.jsx'
 import Appointments from './pages/Appointments.jsx'
+import Medication from './pages/Medication.jsx'
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
 import Terms from './pages/Terms.jsx'
 
@@ -24,6 +25,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/vitals" element={<ProtectedRoute><Vitals /></ProtectedRoute>} />
           <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+          <Route path="/medication"   element={<ProtectedRoute><Medication /></ProtectedRoute>} />
           <Route path="/privacy"      element={<PrivacyPolicy />} />
           <Route path="/terms"        element={<Terms />} />
         </Routes>
