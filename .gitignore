@@ -17,6 +17,9 @@ yarn-debug.log*
 .env.local
 .env.*.local
 
+# Firebase
+.firebase/
+
 # Editor
 .vscode/*
 !.vscode/extensions.json
