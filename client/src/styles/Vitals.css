@@ -1,17 +1,57 @@
 /* filepath: client/src/styles/Vitals.css */
 .vitals-page {
-  max-width: 800px;
+  min-height: 100vh;
+  background: #f1f5f9;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ── Nav from Dashboard.css ── */
+.dash-nav {
+  background: #1e3a5f;
+  padding: 16px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+
+.dash-logo {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-logo:hover { color: #93c5fd; }
+
+.appt-back-link {
+  color: #93c5fd;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.appt-back-link:hover { color: #ffffff; }
+
+/* ── Main ── */
+.vitals-main {
+  max-width: 900px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 40px 32px 60px;
 }
 
 .vitals-header {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
   margin-bottom: 24px;
-  flex-wrap: wrap;
-  gap: 12px;
 }
 
 .vitals-header-left {
@@ -31,20 +71,23 @@
   align-items: center;
 }
 
-.btn-back {
+.btn-summary {
   display: inline-flex;
   align-items: center;
-  color: #6b7280;
+  gap: 6px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 16px;
   text-decoration: none;
-  font-size: 14px;
-  padding: 8px 12px;
-  border-radius: 6px;
+  cursor: pointer;
   transition: background 0.2s;
 }
 
-.btn-back:hover {
-  background: #f3f4f6;
-  color: #1f2937;
+.btn-summary:hover {
+  background: #2563eb;
 }
 
 .btn-add {
