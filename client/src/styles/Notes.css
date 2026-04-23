@@ -163,6 +163,11 @@
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0,0,0,0.1);
 }
+.note-card-clickable { cursor: pointer; }
+.note-card-clickable:focus-visible {
+  outline: 3px solid #fcd34d;
+  outline-offset: 2px;
+}
 .note-pinned {
   border-color: #f59e0b;
   box-shadow: 0 2px 10px rgba(245,158,11,0.18);

@@ -14,6 +14,8 @@ import Appointments from './pages/Appointments.jsx'
 import Medication from './pages/Medication.jsx'
 import Profile from './pages/Profile.jsx'
 import Notes from './pages/Notes.jsx'
+import NoteDetail from './pages/NoteDetail.jsx'
+import Communication from './pages/Communication.jsx'
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
 import Terms from './pages/Terms.jsx'
 
@@ -31,7 +33,9 @@ createRoot(document.getElementById('root')).render(
           <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
           <Route path="/medication"   element={<ProtectedRoute><Medication /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/notes"   element={<ProtectedRoute><Notes /></ProtectedRoute>} />
+          <Route path="/notes"     element={<ProtectedRoute><Notes /></ProtectedRoute>} />
+          <Route path="/notes/:id" element={<ProtectedRoute><NoteDetail /></ProtectedRoute>} />
+          <Route path="/communication" element={<ProtectedRoute><Communication /></ProtectedRoute>} />
           <Route path="/privacy"      element={<PrivacyPolicy />} />
           <Route path="/terms"        element={<Terms />} />
         </Routes>

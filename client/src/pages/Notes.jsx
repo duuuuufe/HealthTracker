@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   collection,
   addDoc,
@@ -127,7 +127,9 @@ const EMPTY_FORM = {
 };
 
 export default function Notes() {
-  const { user } = useAuth();
+  const { user }  = useAuth();
+  const navigate  = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [notes, setNotes]         = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -160,6 +162,19 @@ export default function Notes() {
     });
     return unsub;
   }, [user]);
+
+  // ── Open edit form when arriving from detail page via ?edit=<id> ──
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (!editId || notes.length === 0) return;
+    const target = notes.find((n) => n.id === editId);
+    if (target) {
+      startEdit(target);
+      // clear the param so refreshes don't re-open
+      setSearchParams({}, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, notes]);
 
   // ── Helpers ──
   const setField = (field) => (e) => {
@@ -378,8 +393,17 @@ export default function Notes() {
     return (
     <div
       key={note.id}
+      role="button"
+      tabIndex={0}
+      onClick={() => navigate(`/notes/${note.id}`)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          navigate(`/notes/${note.id}`);
+        }
+      }}
       className={
-        `note-card note-card-${note.category}` +
+        `note-card note-card-${note.category} note-card-clickable` +
         (note.pinned ? ' note-pinned' : '') +
         (hasConflict ? ' note-conflict' : '')
       }
@@ -427,7 +451,13 @@ export default function Notes() {
         )}
 
         {note.category === 'article' && note.articleUrl && (
-          <a href={note.articleUrl} target="_blank" rel="noopener noreferrer" className="note-article-link">
+          <a
+            href={note.articleUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="note-article-link"
+            onClick={(e) => e.stopPropagation()}
+          >
             🔗 Read Article
           </a>
         )}
@@ -447,15 +477,25 @@ export default function Notes() {
         <p className="note-date">Saved {fmtDate(note.createdAt)}</p>
       </div>
 
-      <div className="note-card-actions">
+      <div className="note-card-actions" onClick={(e) => e.stopPropagation()}>
         <button
           className={`btn-pin${note.pinned ? ' btn-unpin' : ''}`}
-          onClick={() => togglePin(note)}
+          onClick={(e) => { e.stopPropagation(); togglePin(note); }}
         >
           {note.pinned ? 'Unpin' : '📌 Pin'}
         </button>
-        <button className="btn-edit"   onClick={() => startEdit(note)}>Edit</button>
-        <button className="btn-delete" onClick={() => handleDelete(note.id)}>Delete</button>
+        <button
+          className="btn-edit"
+          onClick={(e) => { e.stopPropagation(); startEdit(note); }}
+        >
+          Edit
+        </button>
+        <button
+          className="btn-delete"
+          onClick={(e) => { e.stopPropagation(); handleDelete(note.id); }}
+        >
+          Delete
+        </button>
       </div>
     </div>
     );
