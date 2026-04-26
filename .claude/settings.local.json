@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npm run:*)",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "Bash(find /home/wilsonp/Documents/healthsimplify/HealthTracker/client/src -type f -name *[Rr]outer* -o -name index.jsx -o -name main.jsx)",
+      "Bash(grep -rn \"Data Maintenance\\\\|dataMainten\\\\|\\\\/data\" /home/wilsonp/Documents/healthsimplify/HealthTracker --include=*.jsx --include=*.js --include=*.json)"
     ]
   }
 }
