@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import BrandLink from '../components/BrandLink';
 import '../styles/PrivacyPolicy.css';
 
 export default function PrivacyPolicy() {
@@ -6,11 +7,7 @@ export default function PrivacyPolicy() {
     <div className="privacy-page">
       {/* ── Nav ── */}
       <nav className="nav">
-        <Link to="/" className="nav-brand-link">
-          <div className="nav-brand">
-            <span className="nav-icon">&#10084;</span> HealthSimplify
-          </div>
-        </Link>
+        <BrandLink className="nav-brand nav-brand-link" iconClassName="nav-icon" />
         <ul className="nav-links">
           <li><Link to="/">Home</Link></li>
           <li><Link to="/login">Login</Link></li>

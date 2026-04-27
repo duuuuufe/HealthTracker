@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import BrandLink from '../components/BrandLink';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
 import {
@@ -423,7 +424,7 @@ export default function VitalsTrends() {
   return (
     <div className="trends-page">
       <header className="dash-nav">
-        <Link to="/" className="dash-logo">&#10084; HealthSimplify</Link>
+        <BrandLink />
         <Link to="/vitals" className="appt-back-link">&larr; Vitals</Link>
       </header>
 

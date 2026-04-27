@@ -1,5 +1,9 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
+import BrandLink from '../components/BrandLink';
 import '../styles/Dashboard.css';
 
 const FEATURES = [
@@ -33,17 +37,10 @@ const FEATURES = [
   },
   {
     icon: '🥗',
-    title: 'Diet & Nutrition',
-    desc: 'Track daily food intake, calorie counts, and monitor your weight progress.',
-    path: '/diet',
-    color: '#16a34a',
-  },
-  {
-    icon: '📝',
-    title: 'Notes',
-    desc: 'Store recipes, health articles, diet descriptions, and personal notes.',
+    title: 'Nutrition & Notes',
+    desc: 'Log daily meals and calories, save recipes, track diet plans, articles, and personal notes.',
     path: '/notes',
-    color: '#f59e0b',
+    color: '#16a34a',
   },
   {
     icon: '🔍',
@@ -75,9 +72,105 @@ const FEATURES = [
   },
 ];
 
+const DEFAULT_ORDER = FEATURES.map((f) => f.path);
+const FEATURE_BY_PATH = Object.fromEntries(FEATURES.map((f) => [f.path, f]));
+
+function reconcile(savedOrder) {
+  const seen = new Set();
+  const ordered = [];
+  if (Array.isArray(savedOrder)) {
+    for (const path of savedOrder) {
+      if (FEATURE_BY_PATH[path] && !seen.has(path)) {
+        ordered.push(path);
+        seen.add(path);
+      }
+    }
+  }
+  for (const path of DEFAULT_ORDER) {
+    if (!seen.has(path)) ordered.push(path);
+  }
+  return ordered;
+}
+
 export default function Dashboard() {
   const { user, profile, logout } = useAuth();
   const navigate = useNavigate();
+
+  const [order, setOrder] = useState(() => reconcile(profile?.moduleOrder));
+  const [editing, setEditing] = useState(false);
+  const [dragIndex, setDragIndex] = useState(null);
+  const [hoverIndex, setHoverIndex] = useState(null);
+
+  useEffect(() => {
+    if (!user) return;
+    return onSnapshot(doc(db, 'users', user.uid), (snap) => {
+      const data = snap.data();
+      setOrder(reconcile(data?.moduleOrder));
+    });
+  }, [user]);
+
+  const modules = useMemo(() => order.map((path) => FEATURE_BY_PATH[path]).filter(Boolean), [order]);
+
+  const persist = async (next) => {
+    if (!user) return;
+    try {
+      await updateDoc(doc(db, 'users', user.uid), { moduleOrder: next });
+    } catch (err) {
+      console.error('Failed to save module order:', err);
+    }
+  };
+
+  const handleDragStart = (idx) => (e) => {
+    setDragIndex(idx);
+    e.dataTransfer.effectAllowed = 'move';
+    // Some browsers require data to actually start a drag
+    e.dataTransfer.setData('text/plain', String(idx));
+  };
+
+  const handleDragOver = (idx) => (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (idx !== hoverIndex) setHoverIndex(idx);
+  };
+
+  const handleDragLeave = () => {
+    setHoverIndex(null);
+  };
+
+  const handleDrop = (idx) => (e) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === idx) {
+      setDragIndex(null);
+      setHoverIndex(null);
+      return;
+    }
+    const next = [...order];
+    const [moved] = next.splice(dragIndex, 1);
+    next.splice(idx, 0, moved);
+    setOrder(next);
+    setDragIndex(null);
+    setHoverIndex(null);
+    persist(next);
+  };
+
+  const handleDragEnd = () => {
+    setDragIndex(null);
+    setHoverIndex(null);
+  };
+
+  const moveBy = (idx, delta) => {
+    const target = idx + delta;
+    if (target < 0 || target >= order.length) return;
+    const next = [...order];
+    [next[idx], next[target]] = [next[target], next[idx]];
+    setOrder(next);
+    persist(next);
+  };
+
+  const resetOrder = () => {
+    setOrder(DEFAULT_ORDER);
+    persist(DEFAULT_ORDER);
+  };
 
   const handleLogout = async () => {
     navigate('/');
@@ -96,7 +189,7 @@ export default function Dashboard() {
 
       {/* ── Top Nav ── */}
       <header className="dash-nav">
-        <Link to="/" className="dash-logo">&#10084; HealthSimplify</Link>
+        <BrandLink />
         <div className="dash-nav-right">
           <span className="dash-date">{today}</span>
           <div className="dash-avatar">{initials}</div>
@@ -136,18 +229,92 @@ export default function Dashboard() {
 
         {/* ── Feature Grid ── */}
         <section className="dash-grid-section">
-          <h2 className="dash-section-title">Your Health Modules</h2>
-          <div className="dash-grid">
-            {FEATURES.map((f) => (
-              <Link to={f.path} key={f.title} className="dash-card" style={{ '--card-color': f.color }}>
-                <div className="dash-card-icon">{f.icon}</div>
-                <div className="dash-card-body">
-                  <h3>{f.title}</h3>
-                  <p>{f.desc}</p>
-                </div>
-                <div className="dash-card-arrow">&#8594;</div>
-              </Link>
-            ))}
+          <div className="dash-grid-header">
+            <h2 className="dash-section-title">Your Health Modules</h2>
+            <div className="dash-grid-actions">
+              {editing && (
+                <button className="dash-btn-reset" onClick={resetOrder} type="button">
+                  Reset order
+                </button>
+              )}
+              <button
+                className={`dash-btn-customize${editing ? ' active' : ''}`}
+                onClick={() => setEditing((v) => !v)}
+                type="button"
+              >
+                {editing ? 'Done' : '✥ Customize'}
+              </button>
+            </div>
+          </div>
+
+          {editing && (
+            <p className="dash-edit-hint">
+              Drag a card to a new spot, or use the arrows to nudge it. Changes save automatically.
+            </p>
+          )}
+
+          <div className={`dash-grid${editing ? ' dash-grid-editing' : ''}`}>
+            {modules.map((f, idx) => {
+              const isDragging = dragIndex === idx;
+              const isHover = hoverIndex === idx && dragIndex !== null && dragIndex !== idx;
+              const cardClass =
+                `dash-card${isDragging ? ' dash-card-dragging' : ''}${isHover ? ' dash-card-hover-drop' : ''}`;
+              const cardStyle = { '--card-color': f.color };
+
+              if (editing) {
+                return (
+                  <div
+                    key={f.path}
+                    className={cardClass}
+                    style={cardStyle}
+                    draggable
+                    onDragStart={handleDragStart(idx)}
+                    onDragOver={handleDragOver(idx)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop(idx)}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <span className="dash-card-handle" aria-hidden="true">⋮⋮</span>
+                    <div className="dash-card-icon">{f.icon}</div>
+                    <div className="dash-card-body">
+                      <h3>{f.title}</h3>
+                      <p>{f.desc}</p>
+                    </div>
+                    <div className="dash-card-nudge" onMouseDown={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        className="dash-nudge-btn"
+                        onClick={() => moveBy(idx, -1)}
+                        disabled={idx === 0}
+                        aria-label="Move up"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        className="dash-nudge-btn"
+                        onClick={() => moveBy(idx, 1)}
+                        disabled={idx === modules.length - 1}
+                        aria-label="Move down"
+                      >
+                        ↓
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <Link to={f.path} key={f.path} className="dash-card" style={cardStyle}>
+                  <div className="dash-card-icon">{f.icon}</div>
+                  <div className="dash-card-body">
+                    <h3>{f.title}</h3>
+                    <p>{f.desc}</p>
+                  </div>
+                  <div className="dash-card-arrow">&#8594;</div>
+                </Link>
+              );
+            })}
           </div>
         </section>
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import BrandLink from '../components/BrandLink';
 import {
   collection,
   addDoc,
@@ -15,8 +16,10 @@ import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Notes.css';
 
-const CATEGORY_LABELS = { recipe: 'Recipes', article: 'Articles', diet: 'Diet', personal: 'Notes' };
-const CATEGORY_ICONS  = { recipe: '🍽️', article: '📰', diet: '🥗', personal: '📝' };
+const CATEGORY_LABELS = { meal: 'Meal Log', recipe: 'Recipes', article: 'Articles', diet: 'Diet', personal: 'Notes' };
+const CATEGORY_ICONS  = { meal: '🍎', recipe: '🍽️', article: '📰', diet: '🥗', personal: '📝' };
+
+const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 
 const DIET_TYPES = [
   'General Healthy', 'Keto', 'Mediterranean', 'Vegan', 'Vegetarian',
@@ -124,6 +127,11 @@ const EMPTY_FORM = {
   articleUrl: '', excerpt: '',
   // diet
   dietType: 'General Healthy',
+  // meal log
+  mealDate: new Date().toISOString().split('T')[0],
+  mealType: 'Breakfast',
+  foods: '',
+  calories: '',
 };
 
 export default function Notes() {
@@ -195,13 +203,19 @@ export default function Notes() {
 
   const validate = () => {
     const e = {};
-    if (!form.title.trim()) e.title = 'Title is required';
+    if (!form.title.trim() && form.category !== 'meal')
+      e.title = 'Title is required';
     if (form.category === 'recipe' && !form.ingredients.trim())
       e.ingredients = 'At least one ingredient is required';
     if (form.category === 'article' && !form.articleUrl.trim())
       e.articleUrl = 'Article URL is required';
     if ((form.category === 'diet' || form.category === 'personal') && !form.content.trim())
       e.content = 'Content is required';
+    if (form.category === 'meal') {
+      if (!form.foods.trim()) e.foods = 'List at least one food';
+      if (form.calories && Number.isNaN(Number(form.calories)))
+        e.calories = 'Calories must be a number';
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -240,6 +254,17 @@ export default function Notes() {
     if (form.category === 'diet') {
       payload.dietType = form.dietType;
     }
+    if (form.category === 'meal') {
+      Object.assign(payload, {
+        mealDate: form.mealDate,
+        mealType: form.mealType,
+        foods:    form.foods.trim(),
+        calories: form.calories ? Number(form.calories) : null,
+      });
+      if (!form.title.trim()) {
+        payload.title = `${form.mealType} · ${form.mealDate}`;
+      }
+    }
     try {
       if (editingId) {
         await updateDoc(doc(db, 'users', user.uid, 'notes', editingId), payload);
@@ -273,6 +298,10 @@ export default function Notes() {
       articleUrl:  note.articleUrl  || '',
       excerpt:     note.excerpt     || '',
       dietType:    note.dietType    || 'General Healthy',
+      mealDate:    note.mealDate    || new Date().toISOString().split('T')[0],
+      mealType:    note.mealType    || 'Breakfast',
+      foods:       note.foods       || '',
+      calories:    note.calories != null ? String(note.calories) : '',
       pinned:      note.pinned      || false,
       tags:        (note.tags || []).join(', '),
     });
@@ -374,6 +403,14 @@ export default function Notes() {
     [notes],
   );
 
+  // Today's calorie roll-up from meal entries
+  const todayStats = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const meals = notes.filter((n) => n.category === 'meal' && n.mealDate === today);
+    const calories = meals.reduce((sum, m) => sum + (Number(m.calories) || 0), 0);
+    return { count: meals.length, calories };
+  }, [notes]);
+
   const fmtDate = (ts) => {
     if (!ts) return '';
     const d = ts.toDate ? ts.toDate() : new Date(ts);
@@ -450,6 +487,21 @@ export default function Notes() {
           </div>
         )}
 
+        {note.category === 'meal' && (
+          <div className="note-meal-meta">
+            {note.mealDate && <span>📅 {note.mealDate}</span>}
+            {note.mealType && <span>🕒 {note.mealType}</span>}
+            {note.calories != null && note.calories !== '' && (
+              <span className="note-meal-cal">🔥 {note.calories} kcal</span>
+            )}
+          </div>
+        )}
+        {note.category === 'meal' && note.foods && (
+          <p className="note-preview">
+            {note.foods.length > 150 ? note.foods.slice(0, 150) + '…' : note.foods}
+          </p>
+        )}
+
         {note.category === 'article' && note.articleUrl && (
           <a
             href={note.articleUrl}
@@ -505,7 +557,7 @@ export default function Notes() {
     <div className="notes-page">
       {/* ── Nav ── */}
       <header className="dash-nav">
-        <Link to="/" className="dash-logo">&#10084; HealthSimplify</Link>
+        <BrandLink />
         <Link to="/dashboard" className="notes-back-link">&larr; Dashboard</Link>
       </header>
 
@@ -513,8 +565,8 @@ export default function Notes() {
         {/* ── Page Header ── */}
         <div className="notes-header">
           <div>
-            <h1>Notes &amp; Recipes</h1>
-            <p>Store recipes, pin health articles, track diet plans, and write personal health notes.</p>
+            <h1>Nutrition &amp; Notes</h1>
+            <p>Log daily meals, save recipes, track diet plans, pin health articles, and write personal notes — all in one place.</p>
           </div>
           {!showForm && (
             <button className="notes-btn-add" onClick={openAddForm}>+ Add Note</button>
@@ -530,7 +582,7 @@ export default function Notes() {
             <div className="field note-full">
               <label>Category</label>
               <div className="cat-selector">
-                {['recipe', 'article', 'diet', 'personal'].map((c) => (
+                {['meal', 'recipe', 'article', 'diet', 'personal'].map((c) => (
                   <button
                     key={c}
                     type="button"
@@ -545,7 +597,7 @@ export default function Notes() {
 
             {/* Title */}
             <div className="field note-full">
-              <label>Title *</label>
+              <label>{form.category === 'meal' ? 'Title (optional)' : 'Title *'}</label>
               <input
                 type="text"
                 value={form.title}
@@ -554,6 +606,7 @@ export default function Notes() {
                   form.category === 'recipe'   ? 'e.g. Grilled Salmon with Lemon'
                   : form.category === 'article' ? 'e.g. Benefits of the Mediterranean Diet'
                   : form.category === 'diet'    ? 'e.g. My Keto Plan'
+                  : form.category === 'meal'    ? 'Auto: "Breakfast · 2026-04-26"'
                   : 'e.g. Post-workout recovery routine'
                 }
               />
@@ -763,6 +816,60 @@ export default function Notes() {
               </>
             )}
 
+            {/* ── MEAL LOG fields ── */}
+            {form.category === 'meal' && (
+              <>
+                <div className="note-form-grid">
+                  <div className="field">
+                    <label>Date</label>
+                    <input
+                      type="date"
+                      value={form.mealDate}
+                      onChange={setField('mealDate')}
+                    />
+                  </div>
+                  <div className="field">
+                    <label>Meal Type</label>
+                    <select value={form.mealType} onChange={setField('mealType')}>
+                      {MEAL_TYPES.map((m) => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="field note-full">
+                  <label>Foods *</label>
+                  <textarea
+                    rows={4}
+                    value={form.foods}
+                    onChange={setField('foods')}
+                    placeholder={'2 eggs scrambled\n1 slice whole-wheat toast\n1 cup coffee, black'}
+                  />
+                  {errors.foods && <span className="field-error">{errors.foods}</span>}
+                </div>
+                <div className="note-form-grid">
+                  <div className="field">
+                    <label>Calories</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={form.calories}
+                      onChange={setField('calories')}
+                      placeholder="e.g. 420"
+                    />
+                    {errors.calories && <span className="field-error">{errors.calories}</span>}
+                  </div>
+                </div>
+                <div className="field note-full">
+                  <label>Notes (optional)</label>
+                  <textarea
+                    rows={3}
+                    value={form.content}
+                    onChange={setField('content')}
+                    placeholder="How did this meal make you feel? Any reactions?"
+                  />
+                </div>
+              </>
+            )}
+
             {/* ── PERSONAL NOTE fields ── */}
             {form.category === 'personal' && (
               <div className="field note-full">
@@ -804,6 +911,20 @@ export default function Notes() {
           </form>
         )}
 
+        {/* ── Today's nutrition banner ── */}
+        {!showForm && todayStats.count > 0 && (
+          <div className="notes-today-banner">
+            <span className="today-icon">🍽️</span>
+            <div className="today-text">
+              <strong>Today's intake</strong>
+              <span>
+                {todayStats.calories.toLocaleString()} kcal across {todayStats.count}{' '}
+                {todayStats.count === 1 ? 'meal' : 'meals'}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* ── Search + Tabs ── */}
         {!showForm && (
           <>
@@ -821,7 +942,7 @@ export default function Notes() {
             </div>
 
             <div className="notes-tabs">
-              {['all', 'recipe', 'article', 'diet', 'personal'].map((c) => (
+              {['all', 'meal', 'recipe', 'article', 'diet', 'personal'].map((c) => (
                 <button
                   key={c}
                   className={`notes-tab${activeTab === c ? ' notes-tab-active' : ''}`}
@@ -844,7 +965,8 @@ export default function Notes() {
         ) : filtered.length === 0 ? (
           <div className="notes-empty">
             <span className="notes-empty-icon">
-              {activeTab === 'recipe' ? '🍽️'
+              {activeTab === 'meal' ? '🍎'
+               : activeTab === 'recipe' ? '🍽️'
                : activeTab === 'article' ? '📰'
                : activeTab === 'diet' ? '🥗'
                : activeTab === 'personal' ? '📝'

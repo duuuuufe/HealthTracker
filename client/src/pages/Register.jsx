@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import BrandLink from '../components/BrandLink';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -114,9 +115,7 @@ export default function Register() {
       <div className="register-card">
         {/* Header */}
         <div className="register-header">
-          <Link to="/" className="register-logo">
-            &#10084; HealthSimplify
-          </Link>
+          <BrandLink className="register-logo" />
           <h1>Create Your Account</h1>
           <p>Join Today and Take Control of Your Health.</p>
         </div>
