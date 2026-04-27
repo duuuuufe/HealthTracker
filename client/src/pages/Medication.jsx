@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import BrandLink from '../components/BrandLink';
 import {
   collection,
   addDoc,
@@ -272,7 +273,7 @@ export default function Medication() {
     <div className="med-page">
       {/* ── Nav ── */}
       <header className="dash-nav">
-        <Link to="/" className="dash-logo">&#10084; HealthSimplify</Link>
+        <BrandLink />
         <Link to="/dashboard" className="med-back-link">&larr; Dashboard</Link>
       </header>
 

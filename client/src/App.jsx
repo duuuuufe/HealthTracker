@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import BrandLink from './components/BrandLink';
 import './App.css';
 
 const FEATURES = [
@@ -25,13 +26,8 @@ const FEATURES = [
   },
   {
     icon: '🥗',
-    title: 'Diet & Nutrition',
-    desc: 'Record daily food intake, calorie counts, and weight progress toward your personal health goals.',
-  },
-  {
-    icon: '📝',
-    title: 'Notes & Recipes',
-    desc: 'Save favorite recipes, diet plans, health articles, and personal notes — all in one secure place.',
+    title: 'Nutrition & Notes',
+    desc: 'Log daily meals and calories, save recipes, follow diet plans, pin health articles, and write personal notes — all in one place.',
   },
   {
     icon: '🔍',
@@ -91,9 +87,7 @@ function App() {
 
       {/* ── Nav ── */}
       <nav className="nav">
-        <div className="nav-brand">
-          <span className="nav-icon">&#10084;</span> HealthSimplify
-        </div>
+        <BrandLink className="nav-brand" iconClassName="nav-icon" />
         <ul className="nav-links">
           <li><a href="#features">Features</a></li>
           <li><a href="#how">How It Works</a></li>
@@ -159,7 +153,7 @@ function App() {
       <section id="features" className="features">
         <div className="section-header">
           <h2>Everything You Need to Manage Your Health</h2>
-          <p>Ten powerful tools to cover every aspect of your personal health.</p>
+          <p>Powerful tools to cover every aspect of your personal health.</p>
         </div>
         <div className="feature-grid">
           {FEATURES.map((f) => (

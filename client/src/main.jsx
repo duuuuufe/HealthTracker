@@ -17,6 +17,7 @@ import Profile from './pages/Profile.jsx'
 import Notes from './pages/Notes.jsx'
 import NoteDetail from './pages/NoteDetail.jsx'
 import Communication from './pages/Communication.jsx'
+import Monitoring from './pages/Monitoring.jsx'
 import DataMaintenance from './pages/DataMaintenance.jsx'
 import Search from './pages/Search.jsx'
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
@@ -40,6 +41,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/notes"     element={<ProtectedRoute><Notes /></ProtectedRoute>} />
           <Route path="/notes/:id" element={<ProtectedRoute><NoteDetail /></ProtectedRoute>} />
           <Route path="/communication" element={<ProtectedRoute><Communication /></ProtectedRoute>} />
+          <Route path="/monitoring"    element={<ProtectedRoute><Monitoring /></ProtectedRoute>} />
           <Route path="/data"          element={<ProtectedRoute><DataMaintenance /></ProtectedRoute>} />
           <Route path="/search"        element={<ProtectedRoute><Search /></ProtectedRoute>} />
           <Route path="/privacy"      element={<PrivacyPolicy />} />

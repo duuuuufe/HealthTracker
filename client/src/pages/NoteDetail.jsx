@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import BrandLink from '../components/BrandLink';
 import {
   doc,
   collection,
@@ -14,8 +15,8 @@ import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import '../styles/NoteDetail.css';
 
-const CATEGORY_LABELS = { recipe: 'Recipe', article: 'Article', diet: 'Diet', personal: 'Personal Note' };
-const CATEGORY_ICONS  = { recipe: '🍽️', article: '📰', diet: '🥗', personal: '📝' };
+const CATEGORY_LABELS = { meal: 'Meal Log', recipe: 'Recipe', article: 'Article', diet: 'Diet', personal: 'Personal Note' };
+const CATEGORY_ICONS  = { meal: '🍎', recipe: '🍽️', article: '📰', diet: '🥗', personal: '📝' };
 
 // ── Same diet rules used on the list page ──
 const DIET_RULES = {
@@ -160,7 +161,7 @@ export default function NoteDetail() {
     return (
       <div className="nd-page">
         <header className="dash-nav">
-          <Link to="/" className="dash-logo">&#10084; HealthSimplify</Link>
+          <BrandLink />
           <Link to="/notes" className="nd-back-link">&larr; All Notes</Link>
         </header>
         <main className="nd-main"><div className="nd-loading">Loading note…</div></main>
@@ -172,7 +173,7 @@ export default function NoteDetail() {
     return (
       <div className="nd-page">
         <header className="dash-nav">
-          <Link to="/" className="dash-logo">&#10084; HealthSimplify</Link>
+          <BrandLink />
           <Link to="/notes" className="nd-back-link">&larr; All Notes</Link>
         </header>
         <main className="nd-main">
@@ -212,7 +213,7 @@ export default function NoteDetail() {
   return (
     <div className={`nd-page nd-page-${note.category}`}>
       <header className="dash-nav">
-        <Link to="/" className="dash-logo">&#10084; HealthSimplify</Link>
+        <BrandLink />
         <Link to="/notes" className="nd-back-link">&larr; All Notes</Link>
       </header>
 
@@ -334,6 +335,39 @@ export default function NoteDetail() {
           <section className="nd-section">
             <h2>Plan &amp; Description</h2>
             <p className="nd-body-text">{note.content}</p>
+          </section>
+        )}
+
+        {/* ── MEAL ── */}
+        {note.category === 'meal' && (
+          <section className="nd-section">
+            <div className="nd-meta-row">
+              {note.mealDate && (
+                <div className="nd-meta"><span>📅</span><strong>Date</strong><em>{note.mealDate}</em></div>
+              )}
+              {note.mealType && (
+                <div className="nd-meta"><span>🕒</span><strong>Meal</strong><em>{note.mealType}</em></div>
+              )}
+              {note.calories != null && note.calories !== '' && (
+                <div className="nd-meta"><span>🔥</span><strong>Calories</strong><em>{note.calories} kcal</em></div>
+              )}
+            </div>
+            <h2>Foods</h2>
+            {note.foods ? (
+              <ul>
+                {note.foods.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).map((f, i) => (
+                  <li key={i}>{f}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="nd-empty-text">No foods listed.</p>
+            )}
+            {note.content && (
+              <>
+                <h2>Notes</h2>
+                <p className="nd-body-text">{note.content}</p>
+              </>
+            )}
           </section>
         )}
 

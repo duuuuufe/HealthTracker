@@ -84,7 +84,11 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
 }
+.nav-brand:hover { opacity: 0.85; }
 .nav-icon { color: #ef4444; }
 .nav-links {
   list-style: none;

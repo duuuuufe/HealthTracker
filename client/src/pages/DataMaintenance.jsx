@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import BrandLink from '../components/BrandLink';
 import {
   collection,
   query,
@@ -329,7 +330,7 @@ export default function DataMaintenance() {
   return (
     <div className="dm-page">
       <header className="dash-nav">
-        <Link to="/" className="dash-logo">&#10084; HealthSimplify</Link>
+        <BrandLink />
         <Link to="/dashboard" className="dm-back-link">&larr; Dashboard</Link>
       </header>
 

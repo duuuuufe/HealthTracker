@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import BrandLink from '../components/BrandLink';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase';
 import '../styles/Login.css';
@@ -65,7 +66,7 @@ export default function Login() {
 
         {/* Header */}
         <div className="login-header">
-          <Link to="/" className="login-logo">&#10084; HealthSimplify</Link>
+          <BrandLink className="login-logo" />
           <h1>Welcome Back</h1>
           <p>Sign in to manage your health records.</p>
         </div>
