@@ -194,6 +194,20 @@ export default function Medication() {
       year: 'numeric',
     });
 
+  const latestMissedNotification = (missedNotified) => {
+    if (!Array.isArray(missedNotified) || missedNotified.length === 0) return null;
+    const latestKey = [...missedNotified].sort().pop();
+    const [dateKey, time] = latestKey.split('_');
+    if (!dateKey || !time) return null;
+    const [year, month, day] = dateKey.split('-').map(Number);
+    const date = new Date(year, month - 1, day).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    return `${date} at ${fmtTime(time)}`;
+  };
+
   const today = new Date().toISOString().slice(0, 10);
   const isActive = (m) =>
     (!m.endDate || m.endDate >= today) && m.startDate <= today;
@@ -204,46 +218,55 @@ export default function Medication() {
   const upcoming = meds.filter(isUpcoming);
   const discontinued = meds.filter(isDiscontinued);
 
-  const renderCard = (m, past = false) => (
-    <div key={m.id} className={`med-card${past ? ' med-card-past' : ''}`}>
-      <div className="med-card-icon">
-        <span>&#128138;</span>
-      </div>
-      <div className="med-card-body">
-        <div className="med-card-heading">
-          <h3>{m.name}</h3>
-          <span className="med-dosage">
-            {m.dosage} {m.dosageUnit}
-          </span>
+  const renderCard = (m, past = false) => {
+    const lastMissed = latestMissedNotification(m.missedNotified);
+    return (
+      <div key={m.id} className={`med-card${past ? ' med-card-past' : ''}`}>
+        <div className="med-card-icon">
+          <span>&#128138;</span>
         </div>
-        <div className="med-badges">
-          <span className="med-badge">{m.form}</span>
-          <span className="med-badge med-badge-freq">{m.frequency}</span>
-          {m.reminders && !past && (
-            <span className="med-badge med-badge-reminder">Reminders On</span>
-          )}
-        </div>
-        {m.times && m.times.length > 0 && (
-          <div className="med-times">
-            <span className="med-times-label">Intake:</span>
-            {m.times.map((t) => (
-              <span key={t} className="med-time-chip">{fmtTime(t)}</span>
-            ))}
+        <div className="med-card-body">
+          <div className="med-card-heading">
+            <h3>{m.name}</h3>
+            <span className="med-dosage">
+              {m.dosage} {m.dosageUnit}
+            </span>
           </div>
-        )}
-        <p className="med-meta">
-          <span>Start: {fmtDate(m.startDate)}</span>
-          {m.endDate && <span>End: {fmtDate(m.endDate)}</span>}
-          {m.prescriber && <span>Rx: {m.prescriber}</span>}
-        </p>
-        {m.notes && <p className="med-notes">{m.notes}</p>}
+          <div className="med-badges">
+            <span className="med-badge">{m.form}</span>
+            <span className="med-badge med-badge-freq">{m.frequency}</span>
+            {m.reminders && !past && (
+              <span className="med-badge med-badge-reminder">Reminders On</span>
+            )}
+            {lastMissed && (
+              <span className="med-badge med-badge-alert">Alert Sent</span>
+            )}
+          </div>
+          {m.times && m.times.length > 0 && (
+            <div className="med-times">
+              <span className="med-times-label">Intake:</span>
+              {m.times.map((t) => (
+                <span key={t} className="med-time-chip">{fmtTime(t)}</span>
+              ))}
+            </div>
+          )}
+          <p className="med-meta">
+            <span>Start: {fmtDate(m.startDate)}</span>
+            {m.endDate && <span>End: {fmtDate(m.endDate)}</span>}
+            {m.prescriber && <span>Rx: {m.prescriber}</span>}
+          </p>
+          {lastMissed && (
+            <p className="med-alert-note">Last missed alert: {lastMissed}</p>
+          )}
+          {m.notes && <p className="med-notes">{m.notes}</p>}
+        </div>
+        <div className="med-card-actions">
+          <button className="btn-edit" onClick={() => startEdit(m)}>Edit</button>
+          <button className="btn-delete" onClick={() => handleDelete(m.id)}>Delete</button>
+        </div>
       </div>
-      <div className="med-card-actions">
-        <button className="btn-edit" onClick={() => startEdit(m)}>Edit</button>
-        <button className="btn-delete" onClick={() => handleDelete(m.id)}>Delete</button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="med-page">
