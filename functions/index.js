@@ -97,6 +97,131 @@ async function sendSMS(to, message) {
   });
 }
 
+const EVENT_TZ = 'America/New_York';
+const MISSED_WINDOW_MINUTES = 30;
+
+function isValidEmail(email) {
+  return typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
+function getEasternNow() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: EVENT_TZ }));
+}
+
+function getTodayKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function getMissedKey(dateKey, time) {
+  return `${dateKey}_${time}`;
+}
+
+function getNewEmergencyContacts(before = [], after = []) {
+  const beforeEmails = new Set(
+    (before || [])
+      .filter((c) => c?.email?.trim())
+      .map((c) => c.email.trim().toLowerCase()),
+  );
+  return (after || [])
+    .filter((c) => c?.email?.trim())
+    .filter((c) => !beforeEmails.has(c.email.trim().toLowerCase()));
+}
+
+async function sendToEmergencyContacts(userData, message) {
+  const contacts = (userData.emergencyContacts || []).filter((contact) => isValidEmail(contact?.email));
+  if (contacts.length === 0) return;
+
+  for (const contact of contacts) {
+    try {
+      await sendEmail(contact.email.trim(), message);
+      console.log(`Email sent to emergency contact ${contact.email}`);
+    } catch (err) {
+      console.error(`Failed to email emergency contact ${contact.email}:`, err.message);
+    }
+
+    if (contact.phone?.trim()) {
+      try {
+        await sendSMS(contact.phone.trim(), message);
+        console.log(`SMS sent to emergency contact ${contact.phone}`);
+      } catch (err) {
+        console.error(`Failed to SMS emergency contact ${contact.phone}:`, err.message);
+      }
+    }
+  }
+}
+
+function buildContactAddedMessage(userName, contact) {
+  return {
+    subject: `You were added as an emergency contact for ${userName}`,
+    text:
+      `Hi ${contact.name || 'there'},\n\n` +
+      `${userName} has added you as an emergency contact in HealthSimplify. ` +
+      `You will receive notifications if they set appointments, miss medication windows, or log abnormal readings.\n\n` +
+      `Relationship: ${contact.relationship || 'Not specified'}\n` +
+      `If this was unexpected, please reach out to ${userName} directly.\n\n` +
+      `— HealthSimplify`,
+    html:
+      `<p>Hi ${contact.name || 'there'},</p>` +
+      `<p>${userName} has added you as an emergency contact in <strong>HealthSimplify</strong>.</p>` +
+      `<p><strong>Relationship:</strong> ${contact.relationship || 'Not specified'}</p>` +
+      `<p>You may receive notifications for appointments, missed medications, or abnormal readings.</p>` +
+      `<p style="color:#6b7280; font-size:13px;">— HealthSimplify</p>`,
+  };
+}
+
+function buildAppointmentContactMessage(userName, appt) {
+  return {
+    subject: `Appointment scheduled for ${userName}`,
+    text:
+      `Hi,\n\n` +
+      `${userName} has scheduled a new appointment.\n\n` +
+      `Provider: ${appt.provider}\n` +
+      `Type: ${appt.type}\n` +
+      `Date: ${fmtDate(appt.date)}\n` +
+      `Time: ${fmtTime(appt.time)}\n` +
+      `Location: ${appt.location}\n` +
+      (appt.notes ? `Notes: ${appt.notes}\n` : '') +
+      `\n— HealthSimplify`,
+    html:
+      `<p>Hi,</p>` +
+      `<p>${userName} has scheduled a new appointment.</p>` +
+      `<table style="border-collapse:collapse;margin:16px 0;">` +
+      `<tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Provider</td><td style="padding:4px 0;font-weight:600;">${appt.provider}</td></tr>` +
+      `<tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Type</td><td style="padding:4px 0;">${appt.type}</td></tr>` +
+      `<tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Date</td><td style="padding:4px 0;">${fmtDate(appt.date)}</td></tr>` +
+      `<tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Time</td><td style="padding:4px 0;">${fmtTime(appt.time)}</td></tr>` +
+      `<tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Location</td><td style="padding:4px 0;">${appt.location}</td></tr>` +
+      (appt.notes ? `<tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Notes</td><td style="padding:4px 0;font-style:italic;">${appt.notes}</td></tr>` : '') +
+      `</table>` +
+      `<p style="color:#9ca3af;font-size:13px;">— HealthSimplify</p>`,
+  };
+}
+
+function buildMissedMedicationMessage(userName, med, time) {
+  return {
+    subject: `Missed medication alert for ${userName}`,
+    text:
+      `Hi,\n\n` +
+      `${userName} may have missed a scheduled medication dose.\n\n` +
+      `Medication: ${med.name}\n` +
+      `Dosage: ${med.dosage} ${med.dosageUnit}\n` +
+      `Scheduled time: ${fmtTime(time)}\n` +
+      `Date: ${getTodayKey(getEasternNow())}\n` +
+      `\nPlease check in with them to make sure they are okay.\n\n` +
+      `— HealthSimplify`,
+    html:
+      `<p>Hi,</p>` +
+      `<p>${userName} may have missed a scheduled medication dose.</p>` +
+      `<table style="border-collapse:collapse;margin:16px 0;">` +
+      `<tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Medication</td><td style="padding:4px 0;font-weight:600;">${med.name}</td></tr>` +
+      `<tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Dosage</td><td style="padding:4px 0;">${med.dosage} ${med.dosageUnit}</td></tr>` +
+      `<tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Scheduled Time</td><td style="padding:4px 0;">${fmtTime(time)}</td></tr>` +
+      `<tr><td style="padding:4px 12px 4px 0;color:#6b7280;">Date</td><td style="padding:4px 0;">${getTodayKey(getEasternNow())}</td></tr>` +
+      `</table>` +
+      `<p style="color:#9ca3af;font-size:13px;">— HealthSimplify</p>`,
+  };
+}
+
 // ══════════════════════════════════════════════════════════════════
 // Scheduled function — runs every day at 8:00 AM UTC
 // ══════════════════════════════════════════════════════════════════
@@ -182,5 +307,123 @@ exports.onAppointmentUpdated = onDocumentUpdated(
       return event.data.after.ref.update({ remindersSent: [] });
     }
     return null;
+  },
+);
+
+// ══════════════════════════════════════════════════════════════════
+// Firestore trigger — notify emergency contacts when a new contact is added
+// ══════════════════════════════════════════════════════════════════
+exports.onEmergencyContactAdded = onDocumentUpdated(
+  'users/{userId}',
+  async (event) => {
+    const before = event.data.before.data() || {};
+    const after = event.data.after.data() || {};
+    const addedContacts = getNewEmergencyContacts(before.emergencyContacts, after.emergencyContacts);
+    if (addedContacts.length === 0) {
+      return null;
+    }
+
+    const userName = `${after.firstName || ''} ${after.lastName || ''}`.trim() || 'A HealthSimplify user';
+
+    for (const contact of addedContacts) {
+      if (!isValidEmail(contact?.email)) continue;
+      const message = buildContactAddedMessage(userName, contact);
+      try {
+        await sendEmail(contact.email.trim(), message);
+        console.log(`Emergency contact email sent to ${contact.email}`);
+      } catch (err) {
+        console.error(`Failed to notify new emergency contact ${contact.email}:`, err.message);
+      }
+      if (contact.phone?.trim()) {
+        try {
+          await sendSMS(contact.phone.trim(), message);
+          console.log(`Emergency contact SMS sent to ${contact.phone}`);
+        } catch (err) {
+          console.error(`Failed to SMS new emergency contact ${contact.phone}:`, err.message);
+        }
+      }
+    }
+
+    return null;
+  },
+);
+
+// ══════════════════════════════════════════════════════════════════
+// Firestore trigger — notify emergency contacts when an appointment is created
+// ══════════════════════════════════════════════════════════════════
+exports.onAppointmentCreated = onDocumentCreated(
+  'users/{userId}/appointments/{appointmentId}',
+  async (event) => {
+    const appt = event.data.data();
+    if (!appt) return null;
+
+    const userRef = event.data.ref.parent.parent;
+    if (!userRef) return null;
+    const userSnap = await userRef.get();
+    const userData = userSnap.data();
+    if (!userData) return null;
+
+    const userName = `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'A HealthSimplify user';
+    const message = buildAppointmentContactMessage(userName, appt);
+    await sendToEmergencyContacts(userData, message);
+    return null;
+  },
+);
+
+// ══════════════════════════════════════════════════════════════════
+// Scheduled function — notify emergency contacts when medication doses are missed
+// ══════════════════════════════════════════════════════════════════
+exports.checkMissedMedications = onSchedule(
+  {
+    schedule: 'every 15 minutes',
+    timeZone: EVENT_TZ,
+    secrets: [SENDGRID_API_KEY, SENDGRID_FROM_EMAIL, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER],
+  },
+  async () => {
+    const now = getEasternNow();
+    const todayKey = getTodayKey(now);
+
+    const usersSnap = await db.collection('users').get();
+    for (const userDoc of usersSnap.docs) {
+      const userData = userDoc.data();
+      if (!userData) continue;
+
+      const medsSnap = await userDoc.ref.collection('medications').get();
+      for (const medDoc of medsSnap.docs) {
+        const med = medDoc.data();
+        if (!med || med.reminders === false || !Array.isArray(med.times) || med.times.length === 0) {
+          continue;
+        }
+
+        if (med.startDate && med.startDate > todayKey) continue;
+        if (med.endDate && med.endDate < todayKey) continue;
+
+        const missedNotified = Array.isArray(med.missedNotified) ? [...med.missedNotified] : [];
+        let shouldUpdate = false;
+
+        for (const time of med.times.filter((t) => typeof t === 'string' && t.trim())) {
+          const [hour, minute] = time.split(':').map(Number);
+          if (Number.isNaN(hour) || Number.isNaN(minute)) continue;
+
+          const scheduled = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0);
+          const elapsedMinutes = (now.getTime() - scheduled.getTime()) / 60000;
+          const key = getMissedKey(todayKey, time);
+
+          if (elapsedMinutes >= MISSED_WINDOW_MINUTES && !missedNotified.includes(key)) {
+            const userName = `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'A HealthSimplify user';
+            const message = buildMissedMedicationMessage(userName, med, time);
+            await sendToEmergencyContacts(userData, message);
+            missedNotified.push(key);
+            shouldUpdate = true;
+          }
+        }
+
+        if (shouldUpdate) {
+          await medDoc.ref.update({ missedNotified });
+        }
+      }
+    }
+
+    console.log('Missed medication notification check complete.');
   },
 );

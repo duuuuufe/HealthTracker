@@ -370,6 +370,11 @@
   background: #f0fdf4;
 }
 
+.med-badge-alert {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
 .med-times {
   display: flex;
   flex-wrap: wrap;
@@ -414,6 +419,13 @@
   color: #6b7280;
   font-style: italic;
   line-height: 1.5;
+}
+
+.med-alert-note {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #b91c1c;
+  font-weight: 600;
 }
 
 /* Actions */

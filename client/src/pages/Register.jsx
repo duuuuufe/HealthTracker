@@ -94,6 +94,7 @@ export default function Register() {
         doctorPhone: form.doctorPhone,
         lastVisit:   form.lastVisit,
         nextVisit:   form.nextVisit,
+        emergencyContacts: [],
         createdAt:   new Date().toISOString(),
       });
 

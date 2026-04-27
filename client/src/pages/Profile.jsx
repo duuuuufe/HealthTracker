@@ -10,6 +10,7 @@ export default function Profile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [editingContacts, setEditingContacts] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -37,6 +38,7 @@ export default function Profile() {
             doctorPhone: data.doctorPhone || '',
             lastVisit: data.lastVisit || '',
             nextVisit: data.nextVisit || '',
+            emergencyContacts: data.emergencyContacts || [],
           });
         }
       } catch (err) {
@@ -55,6 +57,107 @@ export default function Profile() {
     setSuccess('');
   };
 
+  const handleContactChange = (index, field) => (e) => {
+    const contacts = [...(formData.emergencyContacts || [])];
+    contacts[index] = {
+      ...contacts[index],
+      [field]: e.target.value,
+    };
+    setFormData({ ...formData, emergencyContacts: contacts });
+    setError('');
+    setSuccess('');
+  };
+
+  const addContact = () => {
+    setFormData({
+      ...formData,
+      emergencyContacts: [
+        ...(formData.emergencyContacts || []),
+        { name: '', relationship: '', email: '', phone: '' },
+      ],
+    });
+    setError('');
+    setSuccess('');
+  };
+
+  const removeContact = (index) => {
+    const contacts = [...(formData.emergencyContacts || [])];
+    contacts.splice(index, 1);
+    setFormData({ ...formData, emergencyContacts: contacts });
+    setError('');
+    setSuccess('');
+  };
+
+  const handleEditContacts = () => {
+    setFormData({
+      ...formData,
+      emergencyContacts: profile?.emergencyContacts || [],
+    });
+    setEditingContacts(true);
+    setError('');
+    setSuccess('');
+  };
+
+  const validateContacts = () => {
+    const errors = [];
+    (formData.emergencyContacts || []).forEach((contact, index) => {
+      const isBlank = !contact.name?.trim() && !contact.relationship?.trim() && !contact.email?.trim() && !contact.phone?.trim();
+      if (isBlank) return;
+      if (!contact.name?.trim()) errors.push(`Contact ${index + 1}: name is required`);
+      if (!contact.relationship?.trim()) errors.push(`Contact ${index + 1}: relationship is required`);
+      if (!contact.email?.trim()) errors.push(`Contact ${index + 1}: email is required`);
+      if (contact.email?.trim() && !contact.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) errors.push(`Contact ${index + 1}: valid email is required`);
+    });
+    return errors;
+  };
+
+  const handleSaveContacts = async () => {
+    if (!user) return;
+
+    const validationErrors = validateContacts();
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join('. '));
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    setSuccess('');
+    try {
+      const cleanedContacts = (formData.emergencyContacts || [])
+        .map((contact) => ({
+          name: contact.name?.trim() || '',
+          relationship: contact.relationship?.trim() || '',
+          email: contact.email?.trim() || '',
+          phone: contact.phone?.trim() || '',
+        }))
+        .filter((contact) => contact.name || contact.relationship || contact.email || contact.phone);
+
+      await updateDoc(doc(db, 'users', user.uid), {
+        emergencyContacts: cleanedContacts,
+        updatedAt: new Date().toISOString(),
+      });
+
+      setProfile({ ...profile, emergencyContacts: cleanedContacts });
+      setEditingContacts(false);
+      setSuccess('Emergency contacts updated successfully');
+    } catch (err) {
+      setError('Failed to update emergency contacts');
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelContacts = () => {
+    setFormData({
+      ...formData,
+      emergencyContacts: profile?.emergencyContacts || [],
+    });
+    setEditingContacts(false);
+    setError('');
+  };
+
   const validate = () => {
     const errors = [];
     if (!formData.firstName?.trim()) errors.push('First name is required');
@@ -64,6 +167,16 @@ export default function Profile() {
     if (!formData.height)            errors.push('Height is required');
     if (!formData.weight)            errors.push('Weight is required');
     if (!formData.doctorName?.trim()) errors.push('Doctor name is required');
+
+    (formData.emergencyContacts || []).forEach((contact, index) => {
+      const isBlank = !contact.name?.trim() && !contact.relationship?.trim() && !contact.email?.trim() && !contact.phone?.trim();
+      if (isBlank) return;
+      if (!contact.name?.trim()) errors.push(`Contact ${index + 1}: name is required`);
+      if (!contact.relationship?.trim()) errors.push(`Contact ${index + 1}: relationship is required`);
+      if (!contact.email?.trim()) errors.push(`Contact ${index + 1}: email is required`);
+      if (contact.email?.trim() && !contact.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) errors.push(`Contact ${index + 1}: valid email is required`);
+    });
+
     return errors;
   };
 
@@ -80,14 +193,24 @@ export default function Profile() {
     setError('');
     setSuccess('');
     try {
+      const cleanedContacts = (formData.emergencyContacts || [])
+        .map((contact) => ({
+          name: contact.name?.trim() || '',
+          relationship: contact.relationship?.trim() || '',
+          email: contact.email?.trim() || '',
+          phone: contact.phone?.trim() || '',
+        }))
+        .filter((contact) => contact.name || contact.relationship || contact.email || contact.phone);
+
       await updateDoc(doc(db, 'users', user.uid), {
         ...formData,
         age: formData.age ? Number(formData.age) : null,
         height: formData.height ? Number(formData.height) : null,
         weight: formData.weight ? Number(formData.weight) : null,
+        emergencyContacts: cleanedContacts,
         updatedAt: new Date().toISOString(),
       });
-      setProfile({ ...profile, ...formData });
+      setProfile({ ...profile, ...formData, emergencyContacts: cleanedContacts });
       setEditing(false);
       setSuccess('Profile updated successfully');
     } catch (err) {
@@ -112,6 +235,7 @@ export default function Profile() {
       doctorPhone: profile.doctorPhone || '',
       lastVisit: profile.lastVisit || '',
       nextVisit: profile.nextVisit || '',
+      emergencyContacts: profile.emergencyContacts || [],
     });
     setEditing(false);
     setError('');
@@ -218,6 +342,49 @@ export default function Profile() {
             </div>
           </div>
 
+          <div className="form-section">
+            <div className="section-header">
+              <h2>Emergency Contacts</h2>
+              <button type="button" className="btn-add-contact" onClick={addContact}>
+                + Add Contact
+              </button>
+            </div>
+            {(formData.emergencyContacts || []).length > 0 ? (
+              <div className="contacts-edit-grid">
+                {formData.emergencyContacts.map((contact, index) => (
+                  <div key={index} className="contact-edit-card">
+                    <div className="contact-edit-header">
+                      <span>Contact {index + 1}</span>
+                      <button type="button" className="btn-remove-contact" onClick={() => removeContact(index)}>
+                        Remove
+                      </button>
+                    </div>
+                    <div className="form-grid contact-grid">
+                      <div className="form-group">
+                        <label>Name</label>
+                        <input value={contact.name} onChange={handleContactChange(index, 'name')} />
+                      </div>
+                      <div className="form-group">
+                        <label>Relationship</label>
+                        <input value={contact.relationship} onChange={handleContactChange(index, 'relationship')} />
+                      </div>
+                      <div className="form-group">
+                        <label>Email</label>
+                        <input type="email" value={contact.email} onChange={handleContactChange(index, 'email')} />
+                      </div>
+                      <div className="form-group">
+                        <label>Phone (optional)</label>
+                        <input type="tel" value={contact.phone} onChange={handleContactChange(index, 'phone')} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="no-contacts">Add one or more emergency contacts to notify them of missed medication or abnormal readings.</p>
+            )}
+          </div>
+
           <div className="form-actions">
             <button className="btn-save" onClick={handleSave} disabled={saving}>
               {saving ? 'Saving...' : 'Save Changes'}
@@ -283,6 +450,94 @@ export default function Profile() {
                 <span className="info-value">{profile.nextVisit || '-'}</span>
               </div>
             </div>
+          </div>
+
+          <div className="form-section emergency-contacts-section">
+            <div className="section-header">
+              <h2>Emergency Contacts</h2>
+              {!editing && !editingContacts && (
+                <button className="btn-edit" onClick={handleEditContacts}>
+                  ✏️ Edit
+                </button>
+              )}
+            </div>
+
+            {editingContacts ? (
+              <div>
+                {(formData.emergencyContacts || []).length > 0 ? (
+                  <div className="contacts-edit-grid">
+                    {formData.emergencyContacts.map((contact, index) => (
+                      <div key={index} className="contact-edit-card">
+                        <div className="contact-edit-header">
+                          <span>Contact {index + 1}</span>
+                          <button type="button" className="btn-remove-contact" onClick={() => removeContact(index)}>
+                            Remove
+                          </button>
+                        </div>
+                        <div className="form-grid contact-grid">
+                          <div className="form-group">
+                            <label>Name</label>
+                            <input value={contact.name} onChange={handleContactChange(index, 'name')} />
+                          </div>
+                          <div className="form-group">
+                            <label>Relationship</label>
+                            <input value={contact.relationship} onChange={handleContactChange(index, 'relationship')} />
+                          </div>
+                          <div className="form-group">
+                            <label>Email</label>
+                            <input type="email" value={contact.email} onChange={handleContactChange(index, 'email')} />
+                          </div>
+                          <div className="form-group">
+                            <label>Phone (optional)</label>
+                            <input type="tel" value={contact.phone} onChange={handleContactChange(index, 'phone')} />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="no-contacts">Add one or more emergency contacts to notify them of missed medication or abnormal readings.</p>
+                )}
+                <div className="form-actions">
+                  <button className="btn-add-contact" type="button" onClick={addContact}>
+                    + Add Contact
+                  </button>
+                  <button className="btn-save" type="button" onClick={handleSaveContacts} disabled={saving}>
+                    {saving ? 'Saving...' : 'Save Contacts'}
+                  </button>
+                  <button className="btn-cancel" type="button" onClick={handleCancelContacts}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              (profile.emergencyContacts || []).length > 0 ? (
+                <div className="contacts-grid">
+                  {profile.emergencyContacts.map((contact, index) => (
+                    <div key={index} className="contact-card">
+                      <div className="contact-card-row">
+                        <span className="contact-label">Name</span>
+                        <span className="contact-value">{contact.name}</span>
+                      </div>
+                      <div className="contact-card-row">
+                        <span className="contact-label">Relationship</span>
+                        <span className="contact-value">{contact.relationship}</span>
+                      </div>
+                      <div className="contact-card-row">
+                        <span className="contact-label">Email</span>
+                        <span className="contact-value">{contact.email}</span>
+                      </div>
+                      <div className="contact-card-row">
+                        <span className="contact-label">Phone</span>
+                        <span className="contact-value">{contact.phone || '-'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="no-contacts">No emergency contacts configured yet. Add them while editing your profile.</p>
+              )
+            )}
           </div>
         </div>
       )}
