@@ -209,6 +209,9 @@ export default function Vitals() {
             <Link to="/vitals-summary" className="btn-summary">
               📊 Summary
             </Link>
+            <Link to="/vitals-trends" className="btn-summary">
+              📈 Trends
+            </Link>
             {!showForm && (
               <button className="btn-add" onClick={() => setShowForm(true)}>
                 + Add Vitals
